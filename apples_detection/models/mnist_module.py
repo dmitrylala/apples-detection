@@ -1,12 +1,12 @@
 from typing import Any, List
 
+import pytorch_lightning as pl
 import torch
-from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 
 
-class MNISTLitModule(LightningModule):
+class MNISTLitModule(pl.LightningModule):
     """Example of LightningModule for MNIST classification.
 
     A LightningModule organizes your PyTorch code into 6 sections:
@@ -31,7 +31,7 @@ class MNISTLitModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["net"])
 
         self.net = net
 
@@ -83,8 +83,8 @@ class MNISTLitModule(LightningModule):
     def training_epoch_end(self, outputs: List[Any]):
         # `outputs` is a list of dicts returned from `training_step()`
 
-        # Warning: when overriding `training_epoch_end()`, lightning accumulates outputs from all batches of the epoch
-        # this may not be an issue when training on mnist
+        # Warning: when overriding `training_epoch_end()`, lightning accumulates outputs from all
+        # batches of the epoch this may not be an issue when training on mnist
         # but on larger datasets/models it's easy to run into out-of-memory errors
 
         # consider detaching tensors before returning them from `training_step()`

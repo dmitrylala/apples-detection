@@ -1,13 +1,13 @@
 from typing import Any, Dict, Optional, Tuple
 
+import pytorch_lightning as pl
 import torch
-from pytorch_lightning import LightningDataModule
+import torchvision.transforms as tfs
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 from torchvision.datasets import MNIST
-from torchvision.transforms import transforms
 
 
-class MNISTDataModule(LightningDataModule):
+class MNISTDataModule(pl.LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
 
     A DataModule implements 5 key methods:
@@ -50,9 +50,7 @@ class MNISTDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
-        self.transforms = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
-        )
+        self.transforms = tfs.Compose([tfs.ToTensor(), tfs.Normalize((0.1307,), (0.3081,))])
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -116,7 +114,6 @@ class MNISTDataModule(LightningDataModule):
 
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""
-        pass
 
     def state_dict(self):
         """Extra things to save to checkpoint."""
@@ -124,7 +121,6 @@ class MNISTDataModule(LightningDataModule):
 
     def load_state_dict(self, state_dict: Dict[str, Any]):
         """Things to do when loading checkpoint."""
-        pass
 
 
 if __name__ == "__main__":

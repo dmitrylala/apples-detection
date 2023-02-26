@@ -1,8 +1,6 @@
-import time
 import warnings
 from importlib.util import find_spec
-from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Callable, List
 
 import hydra
 from omegaconf import DictConfig
@@ -10,7 +8,7 @@ from pytorch_lightning import Callback
 from pytorch_lightning.loggers import Logger
 from pytorch_lightning.utilities import rank_zero_only
 
-from src.utils import pylogger, rich_utils
+from apples_detection.utils import pylogger, rich_utils
 
 log = pylogger.get_pylogger(__name__)
 
@@ -28,10 +26,8 @@ def task_wrapper(task_func: Callable) -> Callable:
     """
 
     def wrap(cfg: DictConfig):
-
         # execute the task
         try:
-
             # apply extra utilities
             extras(cfg)
 
@@ -39,7 +35,6 @@ def task_wrapper(task_func: Callable) -> Callable:
 
         # things to do if exception occurs
         except Exception as ex:
-
             # save exception to `.log` file
             log.exception("")
 
@@ -49,9 +44,8 @@ def task_wrapper(task_func: Callable) -> Callable:
 
         # things to always do after either success or exception
         finally:
-
             # display output dir path in terminal
-            log.info(f"Output dir: {cfg.paths.output_dir}")
+            log.info("Output dir: %s", cfg.paths.output_dir)
 
             # close loggers (even if exception occurs so multirun won't fail)
             close_loggers()
@@ -104,7 +98,7 @@ def instantiate_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
 
     for _, cb_conf in callbacks_cfg.items():
         if isinstance(cb_conf, DictConfig) and "_target_" in cb_conf:
-            log.info(f"Instantiating callback <{cb_conf._target_}>")
+            log.info("Instantiating callback <%s>", cb_conf._target_)
             callbacks.append(hydra.utils.instantiate(cb_conf))
 
     return callbacks
@@ -123,7 +117,7 @@ def instantiate_loggers(logger_cfg: DictConfig) -> List[Logger]:
 
     for _, lg_conf in logger_cfg.items():
         if isinstance(lg_conf, DictConfig) and "_target_" in lg_conf:
-            log.info(f"Instantiating logger <{lg_conf._target_}>")
+            log.info("Instantiating logger <%s>", lg_conf._target_)
             logger.append(hydra.utils.instantiate(lg_conf))
 
     return logger
@@ -182,14 +176,14 @@ def get_metric_value(metric_dict: dict, metric_name: str) -> float:
         return None
 
     if metric_name not in metric_dict:
-        raise Exception(
+        raise ValueError(
             f"Metric value not found! <metric_name={metric_name}>\n"
             "Make sure metric name logged in LightningModule is correct!\n"
             "Make sure `optimized_metric` name in `hparams_search` config is correct!"
         )
 
     metric_value = metric_dict[metric_name].item()
-    log.info(f"Retrieved metric value! <{metric_name}={metric_value}>")
+    log.info("Retrieved metric value! <%s=%s>", metric_name, metric_value)
 
     return metric_value
 
@@ -210,5 +204,5 @@ def close_loggers() -> None:
 @rank_zero_only
 def save_file(path: str, content: str) -> None:
     """Save file in rank zero mode (only on one process in multi-GPU setup)."""
-    with open(path, "w+") as file:
+    with open(path, "w+", encoding="utf-8") as file:
         file.write(content)

@@ -4,8 +4,9 @@ import pytest
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import open_dict
 
-from src.train import train
-from tests.helpers.run_if import RunIf
+from apples_detection.train import train
+
+from .helpers.run_if import RunIf
 
 
 def test_train_fast_dev_run(cfg_train):
@@ -34,7 +35,7 @@ def test_train_epoch_gpu_amp(cfg_train):
     HydraConfig().set_config(cfg_train)
     with open_dict(cfg_train):
         cfg_train.trainer.max_epochs = 1
-        cfg_train.trainer.accelerator = "cpu"
+        cfg_train.trainer.accelerator = "gpu"
         cfg_train.trainer.precision = 16
     train(cfg_train)
 
