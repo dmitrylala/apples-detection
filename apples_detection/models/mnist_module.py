@@ -1,12 +1,18 @@
-from typing import Any, List
+from typing import (
+    Any,
+    List,
+)
 
 import torch
-from pytorch_lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric
+import pytorch_lightning as pl
+from torchmetrics import (
+    MaxMetric,
+    MeanMetric,
+)
 from torchmetrics.classification.accuracy import Accuracy
 
 
-class MNISTLitModule(LightningModule):
+class MNISTLitModule(pl.LightningModule):
     """Example of LightningModule for MNIST classification.
 
     A LightningModule organizes your PyTorch code into 6 sections:
@@ -31,7 +37,7 @@ class MNISTLitModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["net"])
 
         self.net = net
 
@@ -72,8 +78,12 @@ class MNISTLitModule(LightningModule):
         # update and log metrics
         self.train_loss(loss)
         self.train_acc(preds, targets)
-        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True
+        )
+        self.log(
+            "train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True
+        )
 
         # we can return here dict with any tensors
         # and then read it in some callback or in `training_epoch_end()` below
@@ -83,8 +93,8 @@ class MNISTLitModule(LightningModule):
     def training_epoch_end(self, outputs: List[Any]):
         # `outputs` is a list of dicts returned from `training_step()`
 
-        # Warning: when overriding `training_epoch_end()`, lightning accumulates outputs from all batches of the epoch
-        # this may not be an issue when training on mnist
+        # Warning: when overriding `training_epoch_end()`, lightning accumulates outputs from all
+        # batches of the epoch this may not be an issue when training on mnist
         # but on larger datasets/models it's easy to run into out-of-memory errors
 
         # consider detaching tensors before returning them from `training_step()`
@@ -116,7 +126,9 @@ class MNISTLitModule(LightningModule):
         # update and log metrics
         self.test_loss(loss)
         self.test_acc(preds, targets)
-        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True
+        )
         self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "preds": preds, "targets": targets}

@@ -1,13 +1,13 @@
 from typing import Any, Dict, Optional, Tuple
 
 import torch
-from pytorch_lightning import LightningDataModule
+import pytorch_lightning as pl
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 from torchvision.datasets import MNIST
-from torchvision.transforms import transforms
+import torchvision.transforms as tfs
 
 
-class MNISTDataModule(LightningDataModule):
+class MNISTDataModule(pl.LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
 
     A DataModule implements 5 key methods:
@@ -50,8 +50,8 @@ class MNISTDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
-        self.transforms = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+        self.transforms = tfs.Compose(
+            [tfs.ToTensor(), tfs.Normalize((0.1307,), (0.3081,))]
         )
 
         self.data_train: Optional[Dataset] = None
@@ -78,8 +78,12 @@ class MNISTDataModule(LightningDataModule):
         """
         # load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
-            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.transforms)
-            testset = MNIST(self.hparams.data_dir, train=False, transform=self.transforms)
+            trainset = MNIST(
+                self.hparams.data_dir, train=True, transform=self.transforms
+            )
+            testset = MNIST(
+                self.hparams.data_dir, train=False, transform=self.transforms
+            )
             dataset = ConcatDataset(datasets=[trainset, testset])
             self.data_train, self.data_val, self.data_test = random_split(
                 dataset=dataset,
@@ -116,7 +120,6 @@ class MNISTDataModule(LightningDataModule):
 
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""
-        pass
 
     def state_dict(self):
         """Extra things to save to checkpoint."""
@@ -124,7 +127,6 @@ class MNISTDataModule(LightningDataModule):
 
     def load_state_dict(self, state_dict: Dict[str, Any]):
         """Things to do when loading checkpoint."""
-        pass
 
 
 if __name__ == "__main__":

@@ -5,11 +5,15 @@ import rich
 import rich.syntax
 import rich.tree
 from hydra.core.hydra_config import HydraConfig
-from omegaconf import DictConfig, OmegaConf, open_dict
+from omegaconf import (
+    DictConfig,
+    OmegaConf,
+    open_dict,
+)
 from pytorch_lightning.utilities import rank_zero_only
 from rich.prompt import Prompt
 
-from src.utils import pylogger
+from apples_detection.utils import pylogger
 
 log = pylogger.get_pylogger(__name__)
 
@@ -33,7 +37,8 @@ def print_config_tree(
 
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
-        print_order (Sequence[str], optional): Determines in what order config components are printed.
+        print_order (Sequence[str], optional): Determines in what order config components are
+        printed.
         resolve (bool, optional): Whether to resolve reference fields of DictConfig.
         save_to_file (bool, optional): Whether to export config to the hydra output folder.
     """
@@ -45,9 +50,14 @@ def print_config_tree(
 
     # add fields from `print_order` to queue
     for field in print_order:
-        queue.append(field) if field in cfg else log.warning(
-            f"Field '{field}' not found in config. Skipping '{field}' config printing..."
-        )
+        if field in cfg:
+            queue.append(field)
+        else:
+            log.warning(
+                "Field '%s' not found in config. Skipping '%s' config printing...",
+                field,
+                field,
+            )
 
     # add all the other fields to queue (not specified in `print_order`)
     for field in cfg:
@@ -71,7 +81,9 @@ def print_config_tree(
 
     # save config tree to file
     if save_to_file:
-        with open(Path(cfg.paths.output_dir, "config_tree.log"), "w") as file:
+        with open(
+            Path(cfg.paths.output_dir, "config_tree.log"), "w", encoding="utf-8"
+        ) as file:
             rich.print(tree, file=file)
 
 
@@ -90,8 +102,10 @@ def enforce_tags(cfg: DictConfig, save_to_file: bool = False) -> None:
         with open_dict(cfg):
             cfg.tags = tags
 
-        log.info(f"Tags: {cfg.tags}")
+        log.info("Tags: %s", cfg.tags)
 
     if save_to_file:
-        with open(Path(cfg.paths.output_dir, "tags.log"), "w") as file:
+        with open(
+            Path(cfg.paths.output_dir, "tags.log"), "w", encoding="utf-8"
+        ) as file:
             rich.print(cfg.tags, file=file)
