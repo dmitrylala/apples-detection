@@ -6,6 +6,9 @@
 <a href="https://pytorchlightning.ai/"><img alt="Lightning" src="https://img.shields.io/badge/-Lightning-792ee5?logo=pytorchlightning&logoColor=white"></a>
 <a href="https://hydra.cc/"><img alt="Config: Hydra" src="https://img.shields.io/badge/Config-Hydra-89b8cd"></a>
 <a href="https://github.com/ashleve/lightning-hydra-template"><img alt="Template" src="https://img.shields.io/badge/-Lightning--Hydra--Template-017F2F?style=flat&logo=github&labelColor=gray"></a><br>
+[![tests](https://github.com/dmitrylala/apples-detection/actions/workflows/test.yml/badge.svg)](https://github.com/dmitrylala/apples-detection/actions/workflows/test.yml)
+[![code-quality](https://github.com/dmitrylala/apples-detection/actions/workflows/code-quality-main.yaml/badge.svg)](https://github.com/dmitrylala/apples-detection/actions/workflows/code-quality-main.yaml)
+[![codecov](https://codecov.io/gh/dmitrylala/apples-detection/branch/main/graph/badge.svg)](https://codecov.io/gh/dmitrylala/apples-detection) <br>
 
 </div>
 
