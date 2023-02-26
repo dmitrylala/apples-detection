@@ -3,28 +3,36 @@ from pathlib import Path
 import pytest
 import torch
 
-from src.data.mnist_datamodule import MNISTDataModule
+from apples_detection.data.mnist_datamodule import MNISTDataModule
 
 
 @pytest.mark.parametrize("batch_size", [32, 128])
 def test_mnist_datamodule(batch_size):
     data_dir = "data/"
 
-    dm = MNISTDataModule(data_dir=data_dir, batch_size=batch_size)
-    dm.prepare_data()
+    pl_module = MNISTDataModule(data_dir=data_dir, batch_size=batch_size)
+    pl_module.prepare_data()
 
-    assert not dm.data_train and not dm.data_val and not dm.data_test
+    assert (
+        not pl_module.data_train and not pl_module.data_val and not pl_module.data_test
+    )
     assert Path(data_dir, "MNIST").exists()
     assert Path(data_dir, "MNIST", "raw").exists()
 
-    dm.setup()
-    assert dm.data_train and dm.data_val and dm.data_test
-    assert dm.train_dataloader() and dm.val_dataloader() and dm.test_dataloader()
+    pl_module.setup()
+    assert pl_module.data_train and pl_module.data_val and pl_module.data_test
+    assert (
+        pl_module.train_dataloader()
+        and pl_module.val_dataloader()
+        and pl_module.test_dataloader()
+    )
 
-    num_datapoints = len(dm.data_train) + len(dm.data_val) + len(dm.data_test)
+    num_datapoints = (
+        len(pl_module.data_train) + len(pl_module.data_val) + len(pl_module.data_test)
+    )
     assert num_datapoints == 70_000
 
-    batch = next(iter(dm.train_dataloader()))
+    batch = next(iter(pl_module.train_dataloader()))
     x, y = batch
     assert len(x) == batch_size
     assert len(y) == batch_size
