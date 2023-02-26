@@ -27,18 +27,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
-      - name: List dependencies
-        run: |
-          poetry show
+      - name: Install project
+        run: poetry install --no-interaction
 
-      - name: Run pytest
+      - name: Run tests
         run: |
-          poetry shell
+          source .venv/bin/activate
           pytest -v
 
   run_tests_macos:
@@ -61,18 +73,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
-      - name: List dependencies
-        run: |
-          poetry show
+      - name: Install project
+        run: poetry install --no-interaction
 
-      - name: Run pytest
+      - name: Run tests
         run: |
-          poetry shell
+          source .venv/bin/activate
           pytest -v
 
   run_tests_windows:
@@ -95,18 +119,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
-      - name: List dependencies
-        run: |
-          poetry show
+      - name: Install project
+        run: poetry install --no-interaction
 
-      - name: Run pytest
+      - name: Run tests
         run: |
-          poetry shell
+          source .venv/bin/activate
           pytest -v
 
   # upload code coverage report
@@ -122,14 +158,30 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
 
       - name: Run tests and collect coverage
         # NEEDS TO BE UPDATED WHEN CHANGING THE NAME OF "src" FOLDER
-        run: poetry shell && pytest --cov apples_detection
+        run: source .venv/bin/activate && pytest --cov apples_detection
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
