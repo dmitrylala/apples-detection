@@ -5,6 +5,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import open_dict
 
 from apples_detection.train import train
+
 from .helpers.run_if import RunIf
 
 
