@@ -1,0 +1,11 @@
+_target_: apples_detection.data.minneapple.MinneAppleDetectionModule
+
+data_dir: ${paths.data_dir}/minneapple/detection",
+train_groups:
+  - '20150921'
+val_groups:
+  - '20150919'
+batch_size: 2
+num_workers: 1
+normalize: True
+pin_memory: True
