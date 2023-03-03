@@ -1,24 +1,9 @@
-from typing import (
-    Any,
-    Dict,
-    Optional,
-    Tuple,
-)
+from typing import Any, Dict, Optional, Tuple
 
-from albumentations import (
-    Compose,
-    Normalize,
-)
-from albumentations.pytorch import (
-    ToTensorV2,
-)
-
-from torch.utils.data import (
-    DataLoader,
-    Dataset,
-)
 import pytorch_lightning as pl
-
+from albumentations import Compose, Normalize
+from albumentations.pytorch import ToTensorV2
+from torch.utils.data import DataLoader, Dataset
 
 from .components import MinneAppleDetectionDataset
 
@@ -28,9 +13,7 @@ def collate_fn(batch):
 
 
 class MinneAppleDetectionModule(pl.LightningDataModule):
-    """
-
-    A DataModule implements 5 key methods:
+    """A DataModule implements 5 key methods:
 
         def prepare_data(self):
             # things to do on 1 GPU/TPU (not on every GPU/TPU in DDP)

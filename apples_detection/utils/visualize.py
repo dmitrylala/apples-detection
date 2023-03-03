@@ -1,19 +1,10 @@
-from typing import (
-    List,
-    Tuple,
-    Dict,
-)
+from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torchvision.transforms.functional import to_pil_image
-from torchvision.ops import box_convert
-from torchvision.utils import (
-    draw_segmentation_masks,
-    draw_bounding_boxes,
-    make_grid,
-)
+from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks, make_grid
 
 
 def show(imgs, figsize=(12, 7), save=None):

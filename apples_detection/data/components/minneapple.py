@@ -1,22 +1,11 @@
-from typing import (
-    Dict,
-    Set,
-    List,
-    Optional,
-    Union,
-    Literal,
-)
-from pathlib import Path
 from functools import partial
-from PIL import Image
+from pathlib import Path
+from typing import Dict, List, Literal, Optional, Set, Union
 
 import numpy as np
-from albumentations import (
-    BasicTransform,
-    BaseCompose,
-)
-
 import torch
+from albumentations import BaseCompose, BasicTransform
+from PIL import Image
 
 from .base import ImageDataset
 

@@ -1,22 +1,12 @@
-from abc import (
-    ABC,
-    abstractmethod,
-)
-from typing import (
-    Optional,
-    Union,
-    Tuple,
-)
+from abc import ABC, abstractmethod
+from typing import Optional, Tuple, Union
 
 import cv2
 import numpy as np
-from PIL import Image
-
 from albumentations import BasicTransform
 from albumentations.core.composition import BaseCompose
-
+from PIL import Image
 from torch.utils.data import Dataset
-
 
 Image.MAX_IMAGE_PIXELS = 933120000
 
@@ -141,9 +131,7 @@ class ImageDataset(Dataset, ABC):
             if image.ndim == 3 and image.shape[2] == 3:  # RGB
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-            if (
-                image.ndim == 3 and image.shape[2] == 2
-            ):  # Gray with Alpha, LA mode in Pillow
+            if image.ndim == 3 and image.shape[2] == 2:  # Gray with Alpha, LA mode in Pillow
                 gray = image[..., 0]
                 alpha = image[..., 1:2] / 255
                 rgb_image = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
