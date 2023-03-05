@@ -149,3 +149,6 @@ configs/local/default.yaml
 /data/
 /logs/
 .env
+
+# Ruff linter
+.ruff_cache/

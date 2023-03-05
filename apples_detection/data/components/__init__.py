@@ -1,0 +1,1 @@
+from .minneapple import MinneAppleDetectionDataset

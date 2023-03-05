@@ -8,7 +8,7 @@ from apples_detection.eval import evaluate
 from apples_detection.train import train
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_train_eval(tmp_path, cfg_train, cfg_eval):
     """Train for 1 epoch with `train.py` and evaluate with `eval.py`"""
     assert str(tmp_path) == cfg_train.paths.output_dir == cfg_eval.paths.output_dir
@@ -28,6 +28,7 @@ def test_train_eval(tmp_path, cfg_train, cfg_eval):
     HydraConfig().set_config(cfg_eval)
     test_metric_dict, _ = evaluate(cfg_eval)
 
+    tol = 1e-3
     diff = abs(train_metric_dict["test/acc"].item() - test_metric_dict["test/acc"].item())
-    assert test_metric_dict["test/acc"] > 0.0
-    assert diff < 0.001
+    assert test_metric_dict["test/acc"] > 0
+    assert diff < tol
