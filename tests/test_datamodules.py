@@ -36,9 +36,14 @@ def test_mnist_datamodule(batch_size):
 
 
 def test_minneapple_detection():
+    data_dir = "data/"
     pl_module = MinneAppleDetectionModule()
-    assert not pl_module.data_train and not pl_module.data_val and not pl_module.data_test
+    pl_module.prepare_data()
     assert "batch_size" in pl_module.hparams
+
+    assert not pl_module.data_train and not pl_module.data_val and not pl_module.data_test
+    assert Path(data_dir, "minneapple").exists()
+    assert Path(data_dir, "minneapple", "detection").exists()
 
     pl_module.setup()
     assert pl_module.data_train and pl_module.data_val and pl_module.data_test

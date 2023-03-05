@@ -3,7 +3,7 @@ exclude =
     .git
     __pycache__
 
-application_import_names=src
+application_import_names=apples_detection
 max-line-length = 100
 import-order-style = google
 convention = google
@@ -15,8 +15,10 @@ use-flake8-tabs = True
 # H301: one import per line
 # H405: multi line docstring summary not separated with an empty line (same as D205)
 # F403: unable to detect undefined names
+# E203: whitespace before ':'
 ignore = H306,
          H101,
          H301,
          H405,
          F403,
+         E203,

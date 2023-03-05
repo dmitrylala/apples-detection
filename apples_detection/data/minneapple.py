@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import pytorch_lightning as pl
@@ -7,9 +9,26 @@ from torch.utils.data import DataLoader, Dataset
 
 from .components import MinneAppleDetectionDataset
 
+DOWNLOAD_URL = "https://conservancy.umn.edu/bitstream/handle/11299/206575/detection.tar.gz"
+
 
 def collate_fn(batch):
     return batch
+
+
+def split_by_right_num(string):
+    head = string.rstrip("0123456789")
+    tail = string[len(head) :]
+    return head, tail
+
+
+def add_leading_zeros(path: Path, n_zeros: int = 5, delim: str = "_") -> Path:
+    parent, name, suffix = path.parent, path.stem, path.suffix
+    *name_parts, last_part = name.split(delim)
+    prefix, old_num = split_by_right_num(last_part)
+    new_num = f"{int(old_num):0{n_zeros}d}"
+    new_path = Path(parent, delim.join(name_parts + [prefix + new_num])).with_suffix(suffix)
+    return new_path
 
 
 class MinneAppleDetectionModule(pl.LightningDataModule):
@@ -75,6 +94,27 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
 
         Do not use it to assign state (self.x = y).
         """
+        data_dir = Path(self.hparams.data_dir)
+
+        if data_dir.exists():
+            return
+
+        out_path = data_dir.parent / "detection.tar.gz"
+
+        download = rf"""
+            curl {DOWNLOAD_URL} --output {out_path} && \
+            tar -xf {out_path} -C {data_dir.parent} && \
+            rm {out_path}
+        """
+        os.system(download)
+
+        fnames = list(data_dir.rglob("*.[png]*"))
+        assert len(fnames) == 1671
+
+        added_zeros = list(map(add_leading_zeros, fnames))
+
+        for fname, new_fname in zip(fnames, added_zeros):
+            os.system(f"mv {fname} {new_fname}")
 
     def setup(self, stage: Optional[str] = None):
         """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
