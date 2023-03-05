@@ -29,7 +29,7 @@ def test_train_fast_dev_run_gpu(cfg_train):
 
 
 @RunIf(min_gpus=1)
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_train_epoch_gpu_amp(cfg_train):
     """Train 1 epoch on GPU with mixed-precision."""
     HydraConfig().set_config(cfg_train)
@@ -40,7 +40,7 @@ def test_train_epoch_gpu_amp(cfg_train):
     train(cfg_train)
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_train_epoch_double_val_loop(cfg_train):
     """Train 1 epoch with validation loop twice per epoch."""
     HydraConfig().set_config(cfg_train)
@@ -50,7 +50,7 @@ def test_train_epoch_double_val_loop(cfg_train):
     train(cfg_train)
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_train_ddp_sim(cfg_train):
     """Simulate DDP (Distributed Data Parallel) on 2 CPU processes."""
     HydraConfig().set_config(cfg_train)
@@ -62,7 +62,7 @@ def test_train_ddp_sim(cfg_train):
     train(cfg_train)
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_train_resume(tmp_path, cfg_train):
     """Run 1 epoch, finish, and resume for another epoch."""
     with open_dict(cfg_train):

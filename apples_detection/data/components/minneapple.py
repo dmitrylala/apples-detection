@@ -11,7 +11,7 @@ from .base import ImageDataset
 
 
 def filter_paths_with_suffixes(
-    paths: List[Path], suffixes: Optional[Set[str]] = None
+    paths: List[Path], suffixes: Optional[Set[str]] = None,
 ) -> List[Path]:
     if not suffixes:
         return paths
@@ -31,6 +31,8 @@ class MinneAppleDetectionDataset(ImageDataset):
     ) -> None:
         test_mode = "test" in mode
         super().__init__(transform, augment, input_dtype, test_mode=test_mode)
+
+        assert Path(rootdir).exists()
 
         filter_groups = partial(filter_paths_with_suffixes, suffixes=groups)
 
@@ -61,9 +63,7 @@ class MinneAppleDetectionDataset(ImageDataset):
             target = self._read_target(mask_path)
             sample.update(target)
 
-        sample = self._apply_transform(self.augment, sample)
-
-        return sample
+        return self._apply_transform(self.augment, sample)
 
     def get_img_name(self, idx):
         return str(self.img_paths[idx].name)
@@ -112,15 +112,13 @@ class MinneAppleDetectionDataset(ImageDataset):
         # All instances are not crowd
         iscrowd = np.zeros((good_obj,), dtype=np.int64)
 
-        target = {
+        return {
             "bboxes": boxes,
             "labels": labels,
             "masks": masks,
             "area": area,
             "iscrowd": iscrowd,
         }
-
-        return target
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         sample = self.get_raw(idx)

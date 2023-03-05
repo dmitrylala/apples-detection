@@ -53,7 +53,7 @@ def cfg_eval_global() -> DictConfig:
 
 # this is called by each test which uses `cfg_train` arg
 # each test generates its own temporary logging path
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def cfg_train(cfg_train_global, tmp_path) -> DictConfig:
     cfg = cfg_train_global.copy()
 
@@ -68,7 +68,7 @@ def cfg_train(cfg_train_global, tmp_path) -> DictConfig:
 
 # this is called by each test which uses `cfg_eval` arg
 # each test generates its own temporary logging path
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def cfg_eval(cfg_eval_global, tmp_path) -> DictConfig:
     cfg = cfg_eval_global.copy()
 

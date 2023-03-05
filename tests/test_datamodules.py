@@ -1,4 +1,3 @@
-import os
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -6,6 +5,9 @@ import pytest
 import torch
 
 from apples_detection.data import MinneAppleDetectionModule, MNISTDataModule
+
+MNIST_POINTS = 70_000
+MINNEAPPLE_POINTS= 1001
 
 
 @pytest.mark.parametrize("batch_size", [32, 128])
@@ -15,18 +17,22 @@ def test_mnist_datamodule(batch_size):
     pl_module = MNISTDataModule(data_dir=data_dir, batch_size=batch_size)
     pl_module.prepare_data()
 
-    assert not pl_module.data_train and not pl_module.data_val and not pl_module.data_test
+    assert not pl_module.data_train
+    assert not pl_module.data_val
+    assert not pl_module.data_test
     assert Path(data_dir, "MNIST").exists()
     assert Path(data_dir, "MNIST", "raw").exists()
 
     pl_module.setup()
-    assert pl_module.data_train and pl_module.data_val and pl_module.data_test
-    assert (
-        pl_module.train_dataloader() and pl_module.val_dataloader() and pl_module.test_dataloader()
-    )
+    assert pl_module.data_train
+    assert pl_module.data_val
+    assert pl_module.data_test
+    assert pl_module.train_dataloader()
+    assert pl_module.val_dataloader()
+    assert pl_module.test_dataloader()
 
     num_datapoints = len(pl_module.data_train) + len(pl_module.data_val) + len(pl_module.data_test)
-    assert num_datapoints == 70_000
+    assert num_datapoints == MNIST_POINTS
 
     batch = next(iter(pl_module.train_dataloader()))
     x, y = batch
@@ -36,7 +42,7 @@ def test_mnist_datamodule(batch_size):
     assert y.dtype == torch.int64
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_minneapple_detection():
     data_dir = Path("data/minneapple-detection/")
 
@@ -45,15 +51,19 @@ def test_minneapple_detection():
     assert data_dir.exists()
     assert "batch_size" in pl_module.hparams
 
-    assert not pl_module.data_train and not pl_module.data_val and not pl_module.data_test
+    assert not pl_module.data_train
+    assert not pl_module.data_val
+    assert not pl_module.data_test
     pl_module.setup()
-    assert pl_module.data_train and pl_module.data_val and pl_module.data_test
-    assert (
-        pl_module.train_dataloader() and pl_module.val_dataloader() and pl_module.test_dataloader()
-    )
+    assert pl_module.data_train
+    assert pl_module.data_val
+    assert pl_module.data_test
+    assert pl_module.train_dataloader()
+    assert pl_module.val_dataloader()
+    assert pl_module.test_dataloader()
 
     num_datapoints = len(pl_module.data_train) + len(pl_module.data_val) + len(pl_module.data_test)
-    assert num_datapoints == 1001
+    assert num_datapoints == MINNEAPPLE_POINTS
 
     batch = next(iter(pl_module.train_dataloader()))
     assert isinstance(batch, Sequence)
@@ -170,7 +180,7 @@ def test_minneapple_detection():
             [420.0, 692.0, 434.0, 711.0],
             [455.0, 662.0, 486.0, 686.0],
             [649.0, 834.0, 673.0, 856.0],
-        ]
+        ],
     )
 
     assert torch.allclose(val_item["bboxes"], gt_bboxes)

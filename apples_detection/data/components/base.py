@@ -43,7 +43,7 @@ class ImageDataset(Dataset, ABC):
         self.rgba_layout_color = rgba_layout_color
 
     def _apply_transform(
-        self, transform: Union[BasicTransform, BaseCompose], sample: dict
+        self, transform: Union[BasicTransform, BaseCompose], sample: dict,
     ) -> dict:
         """Is transformations based on API of albumentations library.
 
@@ -57,15 +57,15 @@ class ImageDataset(Dataset, ABC):
         """
         if transform is None:
             return sample
-
-        new_sample = transform(**sample)
-        return new_sample
+        return transform(**sample)
 
     def _read_image(self, image_path: str) -> np.ndarray:
         image = np.array(Image.open(image_path))
 
+        image_is_two_dimensional = image.ndim == 2
+
         if self.image_format == "rgb":
-            if image.ndim == 2:  # Gray
+            if image_is_two_dimensional:  # Gray
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
             elif image.shape[2] == 4:  # RGBA
                 alpha = image[..., 3:4] / 255
@@ -86,7 +86,7 @@ class ImageDataset(Dataset, ABC):
                 )
                 image = image.astype("uint8")
         elif self.image_format == "rgba":
-            if image.ndim == 2:  # Gray
+            if image_is_two_dimensional:  # Gray
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGBA)
             elif image.shape[2] == 3:  # RGB
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
@@ -96,7 +96,7 @@ class ImageDataset(Dataset, ABC):
                 rgb_image = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
                 image = np.concatenate([rgb_image, alpha], axis=-1)
         elif self.image_format == "bgr":
-            if image.ndim == 2:  # Gray
+            if image_is_two_dimensional:  # Gray
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
             elif image.shape[2] == 4:  # RGBA
                 alpha = image[..., 3:4] / 255
@@ -143,7 +143,7 @@ class ImageDataset(Dataset, ABC):
                 image = image.astype("uint8")
                 image = cv2.cvtColor(gray, cv2.COLOR_RGB2GRAY)
 
-            if image.ndim == 2:  # Gray
+            if image_is_two_dimensional:  # Gray
                 image = image[..., None]
         else:
             raise ValueError(f"Unsupported image format `{self.image_format}`")

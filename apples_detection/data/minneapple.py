@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -6,10 +5,12 @@ import pytorch_lightning as pl
 from albumentations import Compose, Normalize
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset
+from torchtext.utils import download_from_url, extract_archive
 
 from .components import MinneAppleDetectionDataset
 
 DOWNLOAD_URL = "https://conservancy.umn.edu/bitstream/handle/11299/206575/detection.tar.gz"
+TOTAL_IMAGES_AND_MASKS = 1671
 
 
 def collate_fn(batch):
@@ -27,8 +28,7 @@ def add_leading_zeros(path: Path, n_zeros: int = 5, delim: str = "_") -> Path:
     *name_parts, last_part = name.split(delim)
     prefix, old_num = split_by_right_num(last_part)
     new_num = f"{int(old_num):0{n_zeros}d}"
-    new_path = Path(parent, delim.join(name_parts + [prefix + new_num])).with_suffix(suffix)
-    return new_path
+    return Path(parent, delim.join([*name_parts, prefix + new_num])).with_suffix(suffix)
 
 
 class MinneAppleDetectionModule(pl.LightningDataModule):
@@ -99,25 +99,20 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         if data_dir.exists():
             return
 
-        os.mkdir(data_dir)
+        archive_path = data_dir.with_suffix(".tar.gz")
+        download_from_url(DOWNLOAD_URL, archive_path)
 
-        out_path = data_dir.parent / "detection.tar.gz"
-        content_path = data_dir.parent / "detection"
-
-        download = rf"""
-            curl {DOWNLOAD_URL} --output {out_path} && \
-            tar -xf {out_path} -C {data_dir.parent} && mv {content_path}/* {data_dir} && \
-            rm {out_path} && rm -rf {content_path}
-        """
-        os.system(download)
+        extract_archive(str(archive_path), data_dir.parent)
+        (data_dir.parent / "detection").rename(data_dir)
+        archive_path.unlink()
 
         fnames = list(data_dir.rglob("*.[png]*"))
-        assert len(fnames) == 1671
+        assert len(fnames) == TOTAL_IMAGES_AND_MASKS
 
         added_zeros = list(map(add_leading_zeros, fnames))
 
         for fname, new_fname in zip(fnames, added_zeros):
-            os.system(f"mv {fname} {new_fname}")
+            Path(fname).rename(new_fname)
 
     def setup(self, stage: Optional[str] = None):
         """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.

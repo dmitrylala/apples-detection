@@ -20,7 +20,7 @@ class MaskRCNN(nn.Module):
         in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
 
         model.roi_heads.mask_predictor = MaskRCNNPredictor(
-            in_features_mask, hidden_layer, num_classes
+            in_features_mask, hidden_layer, num_classes,
         )
         self.model = model
 
