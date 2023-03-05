@@ -35,6 +35,7 @@ def test_mnist_datamodule(batch_size):
     assert y.dtype == torch.int64
 
 
+@pytest.mark.slow
 def test_minneapple_detection():
     data_dir = "data/"
     pl_module = MinneAppleDetectionModule()

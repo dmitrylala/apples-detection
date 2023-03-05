@@ -99,6 +99,9 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         if data_dir.exists():
             return
 
+        if not data_dir.parent.exists():
+            os.mkdir(data_dir.parent)
+
         out_path = data_dir.parent / "detection.tar.gz"
 
         download = rf"""
