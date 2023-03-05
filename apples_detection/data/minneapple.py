@@ -59,7 +59,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        data_dir: str = "/home/d.nesterov/apples-detection/data/minneapple/detection",
+        data_dir: str = "data/minneapple-detection",
         train_groups: Tuple[str] = ("20150921",),
         val_groups: Tuple[str] = ("20150919",),
         batch_size: int = 2,
@@ -99,15 +99,15 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         if data_dir.exists():
             return
 
-        if not data_dir.parent.exists():
-            os.mkdir(data_dir.parent)
+        os.mkdir(data_dir)
 
         out_path = data_dir.parent / "detection.tar.gz"
+        content_path = data_dir.parent / "detection"
 
         download = rf"""
             curl {DOWNLOAD_URL} --output {out_path} && \
-            tar -xf {out_path} -C {data_dir.parent} && \
-            rm {out_path}
+            tar -xf {out_path} -C {data_dir.parent} && mv {content_path}/* {data_dir} && \
+            rm {out_path} && rm -rf {content_path}
         """
         os.system(download)
 

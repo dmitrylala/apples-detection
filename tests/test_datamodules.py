@@ -1,3 +1,4 @@
+import os
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -37,15 +38,14 @@ def test_mnist_datamodule(batch_size):
 
 @pytest.mark.slow
 def test_minneapple_detection():
-    data_dir = "data/"
-    pl_module = MinneAppleDetectionModule()
+    data_dir = Path("data/minneapple-detection/")
+
+    pl_module = MinneAppleDetectionModule(data_dir=data_dir)
     pl_module.prepare_data()
+    assert data_dir.exists()
     assert "batch_size" in pl_module.hparams
 
     assert not pl_module.data_train and not pl_module.data_val and not pl_module.data_test
-    assert Path(data_dir, "minneapple").exists()
-    assert Path(data_dir, "minneapple", "detection").exists()
-
     pl_module.setup()
     assert pl_module.data_train and pl_module.data_val and pl_module.data_test
     assert (
