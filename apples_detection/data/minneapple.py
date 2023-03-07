@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import pytorch_lightning as pl
-from albumentations import Compose, Normalize
+from albumentations import Compose, HorizontalFlip, LongestMaxSize, Normalize
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset
 from torchtext.utils import download_from_url, extract_archive
@@ -14,7 +14,7 @@ TOTAL_IMAGES_AND_MASKS = 1671
 
 
 def collate_fn(batch):
-    return batch
+    return tuple(zip(*batch))
 
 
 def split_by_right_num(string):
@@ -64,7 +64,10 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         val_groups: Tuple[str] = ("20150919",),
         batch_size: int = 2,
         num_workers: int = 1,
-        normalize: bool = True,
+        normalize: bool = False,
+        flip: bool = True,
+        rescale: bool = True,
+        persistent_workers: bool = False,
         pin_memory: bool = True,
     ):
         super().__init__()
@@ -77,9 +80,21 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         transforms = []
         if normalize:
             transforms.append(Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
+
+        if rescale:
+            transforms.append(LongestMaxSize(max_size=500))
+
         transforms.append(ToTensorV2())
 
+        augs = []
+        if flip:
+            augs.append(HorizontalFlip())
+
         self.train_transforms = Compose(
+            augs + transforms,
+            bbox_params={"format": "pascal_voc", "label_fields": ["labels"]},
+        )
+        self.val_transforms = Compose(
             transforms,
             bbox_params={"format": "pascal_voc", "label_fields": ["labels"]},
         )
@@ -131,7 +146,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             self.data_val = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
                 mode="train",
-                transform=self.train_transforms,
+                transform=self.val_transforms,
                 groups=self.hparams.val_groups,
             )
             self.data_test = MinneAppleDetectionDataset(
@@ -148,6 +163,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
             collate_fn=collate_fn,
+            persistent_workers=self.hparams.persistent_workers,
         )
 
     def val_dataloader(self):
@@ -158,6 +174,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
             collate_fn=collate_fn,
+            persistent_workers=self.hparams.persistent_workers,
         )
 
     def test_dataloader(self):
@@ -168,6 +185,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
             collate_fn=collate_fn,
+            persistent_workers=self.hparams.persistent_workers,
         )
 
     def teardown(self, stage: Optional[str] = None):

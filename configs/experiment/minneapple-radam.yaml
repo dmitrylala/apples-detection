@@ -1,0 +1,29 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: minneapple
+  - override /model: minneapple
+  - override /trainer: gpu
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+logger:
+  wandb:
+    name: faster-rcnn-radam
+    group: minneapple
+    tags: [faster_rcnn, radam]
+
+seed: 42
+
+trainer:
+  max_epochs: 30
+
+optimizer:
+  _target_: torch.optim.RAdam
+  _partial_: true
+  lr: 0.01
+  weight_decay: 0.0001

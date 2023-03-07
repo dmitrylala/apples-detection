@@ -65,23 +65,27 @@ def test_minneapple_detection():
     num_datapoints = len(pl_module.data_train) + len(pl_module.data_val) + len(pl_module.data_test)
     assert num_datapoints == MINNEAPPLE_POINTS
 
-    batch = next(iter(pl_module.train_dataloader()))
-    assert isinstance(batch, Sequence)
-    assert len(batch) == pl_module.hparams.batch_size
+    images, targets = next(iter(pl_module.train_dataloader()))
+    for item in (images, targets):
+        assert isinstance(item, Sequence)
+        assert len(item) == pl_module.hparams.batch_size
+
+    for image in images:
+        assert isinstance(image, torch.Tensor)
+        assert image.dtype == torch.float32
 
     must_have_keys_dtypes = {
-        "image": torch.float32,
-        "bboxes": torch.float32,
+        "boxes": torch.float32,
         "labels": torch.int64,
     }
 
-    for item in batch:
-        assert all(key in item for key in must_have_keys_dtypes)
-        assert all(isinstance(val, torch.Tensor) for val in item.values())
-        assert all(item[key].dtype == gt_dtype for key, gt_dtype in must_have_keys_dtypes.items())
+    for target in targets:
+        assert all(key in target for key in must_have_keys_dtypes)
+        assert all(isinstance(val, torch.Tensor) for val in target.values())
+        assert all(target[key].dtype == gt_dtype for key, gt_dtype in must_have_keys_dtypes.items())
 
     assert pl_module.data_val.get_img_name(0) == "20150919_174151_image00001.png"
-    val_item = pl_module.data_val[0]
+    _, val_target = pl_module.data_val[0]
 
     gt_bboxes = torch.tensor(
         [
@@ -183,4 +187,4 @@ def test_minneapple_detection():
         ],
     )
 
-    assert torch.allclose(val_item["bboxes"], gt_bboxes)
+    assert torch.allclose(val_target["boxes"], gt_bboxes)
