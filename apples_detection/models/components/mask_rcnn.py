@@ -9,7 +9,7 @@ class MaskRCNN(nn.Module):
     def __init__(
         self,
         num_classes: int = 2,
-        weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT,
+        weights = MaskRCNN_ResNet50_FPN_Weights.DEFAULT,
         hidden_layer: int = 256,
     ) -> None:
         super().__init__()
