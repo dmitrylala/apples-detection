@@ -1,0 +1,22 @@
+_target_: apples_detection.models.minneapple_detection.MinneAppleDetectionLitModule
+
+net:
+  _target_: apples_detection.models.components.faster_rcnn.FasterRCNN
+  weights: COCO_V1
+  num_classes: 2
+  trainable_backbone_layers: 3
+
+optimize_computations: false
+
+optimizer:
+  _target_: torch.optim.SGD
+  _partial_: true
+  lr: 0.001
+  momentum: 0.9
+  weight_decay: 0.0005
+# scheduler:
+#   _target_: torch.optim.lr_scheduler.MultiStepLR
+#   _partial_: true
+#   milestones:
+#     - 20
+#   gamma: 0.1

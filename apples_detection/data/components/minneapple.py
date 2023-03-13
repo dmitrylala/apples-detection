@@ -128,7 +128,7 @@ class MinneAppleDetectionDataset(ImageDataset):
         sample = self._apply_transform(self.transform, sample)
 
         # converting to torch.FloatTensor; self.input_dtype='float32' by default
-        sample["image"] = sample["image"].type(torch.__dict__[self.input_dtype])
+        sample["image"] = sample["image"].type(torch.__dict__[self.input_dtype]) / 255.0
 
         if not self.test_mode:
             sample["bboxes"] = torch.from_numpy(np.array(sample["bboxes"])).float()
@@ -139,4 +139,10 @@ class MinneAppleDetectionDataset(ImageDataset):
             sample["image_id"] = torch.tensor(sample["image_id"]).int()
             sample["masks"] = torch.stack(sample["masks"]).to(torch.uint8)
 
-        return sample
+            return sample["image"], {
+                "boxes": sample["bboxes"],
+                "labels": sample["labels"],
+                "masks": sample["masks"],
+            }
+
+        return sample["image"]

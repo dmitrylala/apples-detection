@@ -39,11 +39,15 @@ pytest-cov = "^4.0.0"
 ipykernel = "^6.21.2"
 matplotlib = "^3.7.0"
 ruff = "^0.0.254"
+black = "^23.1.0"
 
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
+
+[tool.black]
+line-length = 100
 
 [build-system]
 requires = ["poetry-core"]

@@ -152,3 +152,6 @@ configs/local/default.yaml
 
 # Ruff linter
 .ruff_cache/
+
+# Wandb logs
+wandb/

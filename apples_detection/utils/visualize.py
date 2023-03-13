@@ -11,7 +11,9 @@ def show(imgs, figsize=(12, 7), save=None):
     if not isinstance(imgs, list):
         imgs = [imgs]
     _, axs = plt.subplots(
-        ncols=len(imgs), squeeze=False, figsize=figsize,
+        ncols=len(imgs),
+        squeeze=False,
+        figsize=figsize,
     )  # (width, height) in inches
     for i, img in enumerate(imgs):
         axs[0, i].imshow(np.asarray(to_pil_image(img.detach())))
@@ -24,7 +26,7 @@ def show(imgs, figsize=(12, 7), save=None):
 
 
 def draw_predicts(
-    apple_data: List[Dict[str, torch.Tensor]],
+    apple_data: List[Tuple[torch.Tensor, Dict[str, torch.Tensor]]],
     proba_threshold=0.5,
     bbox_width=4,
     bbox_color="red",
@@ -34,18 +36,16 @@ def draw_predicts(
 ):
     apples_visualization = []
 
-    for sample in apple_data:
-        assert "image" in sample
-
-        to_visualize = sample["image"].to(torch.uint8)
-        if "masks" not in sample and "bboxes" not in sample:
+    for image, target in apple_data:
+        to_visualize = image.to(torch.uint8).detach().cpu()
+        if "masks" not in target and "boxes" not in target:
             apples_visualization.append(to_visualize)
             continue
 
-        sample_copy = {key: val.clone() for key, val in sample.items()}
+        sample_copy = {key: val.detach().cpu().clone() for key, val in target.items()}
         if "scores" in sample_copy:
             indices = sample_copy["scores"] > confidence_threshold
-            for key in ["bboxes", "masks"]:
+            for key in ["boxes", "masks"]:
                 sample_copy[key] = sample_copy[key][indices]
 
         # converting masks to boolean
@@ -54,11 +54,17 @@ def draw_predicts(
 
         if torch.any(bool_masks):
             to_visualize = draw_segmentation_masks(
-                to_visualize, masks=bool_masks, alpha=mask_alpha, colors=mask_color,
+                to_visualize,
+                masks=bool_masks,
+                alpha=mask_alpha,
+                colors=mask_color,
             )
-            if "bboxes" in sample_copy:
+            if "boxes" in sample_copy:
                 to_visualize = draw_bounding_boxes(
-                    to_visualize, sample_copy["bboxes"], colors=bbox_color, width=bbox_width,
+                    to_visualize,
+                    sample_copy["boxes"],
+                    colors=bbox_color,
+                    width=bbox_width,
                 )
 
         apples_visualization.append(to_visualize)
@@ -79,6 +85,10 @@ def visualize_apples(
     save=None,
 ):
     apples_visualization = draw_predicts(
-        apple_data, proba_threshold, bbox_width, bbox_color, mask_alpha,
+        apple_data,
+        proba_threshold,
+        bbox_width,
+        bbox_color,
+        mask_alpha,
     )
     show(make_grid(apples_visualization, nrow=nrow), figsize=figsize, save=save)

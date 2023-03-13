@@ -43,7 +43,9 @@ class ImageDataset(Dataset, ABC):
         self.rgba_layout_color = rgba_layout_color
 
     def _apply_transform(
-        self, transform: Union[BasicTransform, BaseCompose], sample: dict,
+        self,
+        transform: Union[BasicTransform, BaseCompose],
+        sample: dict,
     ) -> dict:
         """Is transformations based on API of albumentations library.
 

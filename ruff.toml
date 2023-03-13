@@ -16,13 +16,17 @@ ignore = [
 exclude = ["apples_detection/data/components/base.py"]
 namespace-packages = ["apples_detection"]
 
-# Ignore 'F401' (unused-import) in all '__init__.py' files.
 [per-file-ignores]
+# Ignore 'F401' (unused-import) in all '__init__.py' files.
 "__init__.py" = ["F401"]
+
 "tests/helpers/run_if.py" = ["PLR0912", "PLR0913"]
+
+# Ignore 'ARG002' (unused-args) in pytorch-lightning modules
 "apples_detection/data/minneapple.py" = ["ARG002"]
 "apples_detection/data/mnist.py" = ["ARG002"]
 "apples_detection/models/mnist_module.py" = ["ARG002"]
+"apples_detection/models/minneapple_detection.py" = ["ARG002"]
 
 [pydocstyle]
 convention = "google"
