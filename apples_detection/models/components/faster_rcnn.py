@@ -22,5 +22,5 @@ class FasterRCNN(nn.Module):
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
         self.model = model
 
-    def forward(self, x, y = None):
+    def forward(self, x, y=None):
         return self.model(x, y)

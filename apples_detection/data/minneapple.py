@@ -66,7 +66,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         num_workers: int = 1,
         normalize: bool = False,
         flip: bool = True,
-        rescale: bool = True,
+        rescale: bool = False,
         persistent_workers: bool = False,
         pin_memory: bool = True,
     ):

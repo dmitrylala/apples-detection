@@ -31,7 +31,7 @@ def task_wrapper(task_func: Callable) -> Callable:
             # apply extra utilities
             extras(cfg)
 
-            metric_dict, object_dict = task_func(cfg=cfg)
+            res = task_func(cfg=cfg)
 
         # things to do if exception occurs
         except Exception as ex:
@@ -50,7 +50,7 @@ def task_wrapper(task_func: Callable) -> Callable:
             # close loggers (even if exception occurs so multirun won't fail)
             close_loggers()
 
-        return metric_dict, object_dict
+        return res
 
     return wrap
 

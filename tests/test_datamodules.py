@@ -7,7 +7,7 @@ import torch
 from apples_detection.data import MinneAppleDetectionModule, MNISTDataModule
 
 MNIST_POINTS = 70_000
-MINNEAPPLE_POINTS= 1001
+MINNEAPPLE_POINTS = 1001
 
 
 @pytest.mark.parametrize("batch_size", [32, 128])

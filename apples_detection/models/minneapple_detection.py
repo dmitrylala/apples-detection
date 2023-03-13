@@ -11,25 +11,29 @@ from wandb import Image
 def to_wandb_image(
     image: torch.Tensor,
     pred: Dict[str, torch.Tensor],
-    target: Dict[str, torch.Tensor]) -> Image:
-    return Image(image, boxes = {
+    target: Dict[str, torch.Tensor],
+) -> Image:
+    return Image(
+        image,
+        boxes={
             "predictions": {
-                "box_data": [{
-                    # bbox is in format [xmin, ymin, xmax, ymax]
-                    "position": {
-                        "minX": bbox[0].item(),
-                        "maxX": bbox[2].item(),
-                        "minY": bbox[1].item(),
-                        "maxY": bbox[3].item(),
-                    },
-                    "class_id": label.item(),
-                    "scores": {
-                        "score": score.item(),
-                    },
-                    "domain": "pixel",
-                    "box_caption": "apple",
-                }
-                for bbox, score, label in zip(pred["boxes"], pred["scores"], pred["labels"])
+                "box_data": [
+                    {
+                        # bbox is in format [xmin, ymin, xmax, ymax]
+                        "position": {
+                            "minX": bbox[0].item(),
+                            "maxX": bbox[2].item(),
+                            "minY": bbox[1].item(),
+                            "maxY": bbox[3].item(),
+                        },
+                        "class_id": label.item(),
+                        "scores": {
+                            "score": score.item(),
+                        },
+                        "domain": "pixel",
+                        "box_caption": "apple",
+                    }
+                    for bbox, score, label in zip(pred["boxes"], pred["scores"], pred["labels"])
                 ],
                 "class_labels": {
                     0: "background",
@@ -37,19 +41,20 @@ def to_wandb_image(
                 },
             },
             "ground_truth": {
-                "box_data": [{
-                    # bbox is in format [xmin, ymin, xmax, ymax]
-                    "position": {
-                        "minX": bbox[0].item(),
-                        "maxX": bbox[2].item(),
-                        "minY": bbox[1].item(),
-                        "maxY": bbox[3].item(),
-                    },
-                    "class_id": label.item(),
-                    "domain": "pixel",
-                    "box_caption": "apple",
-                }
-                for bbox, label in zip(target["boxes"], target["labels"])
+                "box_data": [
+                    {
+                        # bbox is in format [xmin, ymin, xmax, ymax]
+                        "position": {
+                            "minX": bbox[0].item(),
+                            "maxX": bbox[2].item(),
+                            "minY": bbox[1].item(),
+                            "maxY": bbox[3].item(),
+                        },
+                        "class_id": label.item(),
+                        "domain": "pixel",
+                        "box_caption": "apple",
+                    }
+                    for bbox, label in zip(target["boxes"], target["labels"])
                 ],
                 "class_labels": {
                     0: "background",
@@ -104,13 +109,17 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         images, targets = batch
         batch_size = len(images)
         losses = self.model_step([images, targets])
-        detached_losses = {
-            name: value.detach().cpu().item()
-            for name, value in losses.items()
-        }
+        detached_losses = {name: value.detach().cpu().item() for name, value in losses.items()}
 
-        self.log_dict(detached_losses, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True,
-                        batch_size=batch_size, logger=True)
+        self.log_dict(
+            detached_losses,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+            batch_size=batch_size,
+            logger=True,
+        )
 
         return {"loss": sum(losses.values()), **detached_losses}
 
@@ -130,8 +139,15 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
             run.log({image_id: wandb_image})
 
         metrics = self.val_acc(preds, targets)
-        self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True,
-                        batch_size=batch_size, logger=True)
+        self.log_dict(
+            metrics,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+            batch_size=batch_size,
+            logger=True,
+        )
 
         return metrics
 
@@ -143,7 +159,6 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         self.log("best_val_map", self.val_acc_best, prog_bar=True, sync_dist=True, logger=True)
 
         self.val_acc.reset()
-
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.

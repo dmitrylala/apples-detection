@@ -9,7 +9,7 @@ class MaskRCNN(nn.Module):
     def __init__(
         self,
         num_classes: int = 2,
-        weights = MaskRCNN_ResNet50_FPN_Weights.DEFAULT,
+        weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT,
         hidden_layer: int = 256,
     ) -> None:
         super().__init__()
@@ -20,7 +20,9 @@ class MaskRCNN(nn.Module):
         in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
 
         model.roi_heads.mask_predictor = MaskRCNNPredictor(
-            in_features_mask, hidden_layer, num_classes,
+            in_features_mask,
+            hidden_layer,
+            num_classes,
         )
         self.model = model
 

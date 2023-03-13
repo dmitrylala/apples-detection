@@ -11,7 +11,9 @@ def show(imgs, figsize=(12, 7), save=None):
     if not isinstance(imgs, list):
         imgs = [imgs]
     _, axs = plt.subplots(
-        ncols=len(imgs), squeeze=False, figsize=figsize,
+        ncols=len(imgs),
+        squeeze=False,
+        figsize=figsize,
     )  # (width, height) in inches
     for i, img in enumerate(imgs):
         axs[0, i].imshow(np.asarray(to_pil_image(img.detach())))
@@ -52,11 +54,17 @@ def draw_predicts(
 
         if torch.any(bool_masks):
             to_visualize = draw_segmentation_masks(
-                to_visualize, masks=bool_masks, alpha=mask_alpha, colors=mask_color,
+                to_visualize,
+                masks=bool_masks,
+                alpha=mask_alpha,
+                colors=mask_color,
             )
             if "boxes" in sample_copy:
                 to_visualize = draw_bounding_boxes(
-                    to_visualize, sample_copy["boxes"], colors=bbox_color, width=bbox_width,
+                    to_visualize,
+                    sample_copy["boxes"],
+                    colors=bbox_color,
+                    width=bbox_width,
                 )
 
         apples_visualization.append(to_visualize)
@@ -77,6 +85,10 @@ def visualize_apples(
     save=None,
 ):
     apples_visualization = draw_predicts(
-        apple_data, proba_threshold, bbox_width, bbox_color, mask_alpha,
+        apple_data,
+        proba_threshold,
+        bbox_width,
+        bbox_color,
+        mask_alpha,
     )
     show(make_grid(apples_visualization, nrow=nrow), figsize=figsize, save=save)
