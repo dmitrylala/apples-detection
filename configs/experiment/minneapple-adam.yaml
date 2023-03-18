@@ -6,7 +6,8 @@
 defaults:
   - override /data: minneapple
   - override /model: minneapple
-  - override /trainer: gpu
+  # - override /trainer: gpu
+  - override /trainer: cpu
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
