@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Set, Union
+from typing import Dict, Literal, Optional, Set, Union
 
 import numpy as np
 import torch
@@ -8,15 +8,7 @@ from albumentations import BaseCompose, BasicTransform
 from PIL import Image
 
 from .base import ImageDataset
-
-
-def filter_paths_with_suffixes(
-    paths: List[Path], suffixes: Optional[Set[str]] = None,
-) -> List[Path]:
-    if not suffixes:
-        return paths
-
-    return [Path(path) for path in paths for suffix in suffixes if suffix in str(path)]
+from .utils import DetectionDatasetPaths, filter_paths_with_suffixes
 
 
 class MinneAppleDetectionDataset(ImageDataset):
@@ -29,21 +21,34 @@ class MinneAppleDetectionDataset(ImageDataset):
         augment: Optional[Union[BasicTransform, BaseCompose]] = None,
         input_dtype: str = "float32",
     ) -> None:
-        test_mode = "test" in mode
+        test_mode = mode == "test"
         super().__init__(transform, augment, input_dtype, test_mode=test_mode)
 
-        assert Path(rootdir).exists()
+        root = Path(rootdir) / mode
+        assert root.exists()
+        assert (root / "images").exists()
+        if not test_mode:
+            assert (root / "masks").exists()
 
         filter_groups = partial(filter_paths_with_suffixes, suffixes=groups)
 
-        self.root = Path(rootdir) / mode
-        self.img_paths = filter_groups(sorted((self.root / "images").glob("*[.png]*")))
+        img_paths = filter_groups(
+            sorted(p.relative_to(root) for p in (root / "images").glob("*[.png]*")),
+        )
 
+        masks_paths = None
         if not test_mode:
-            self.masks_paths = filter_groups(sorted((self.root / "masks").glob("*[.png]*")))
+            masks_paths = filter_groups(
+                sorted(p.relative_to(root) for p in (root / "masks").glob("*[.png]*")),
+            )
+
+        self.paths = DetectionDatasetPaths(root, img_paths, masks_paths)
 
     def __len__(self) -> int:
-        return len(self.img_paths)
+        return len(self.paths)
+
+    def get_paths(self) -> DetectionDatasetPaths:
+        return self.paths
 
     def get_raw(self, idx) -> Dict:
         """
@@ -54,26 +59,35 @@ class MinneAppleDetectionDataset(ImageDataset):
             sample['target'] - Target class.
             sample['index'] - Index.
         """
-        img_path = self.img_paths[idx]
+        img_path, mask_path = self.paths[idx]
         image = self._read_image(img_path)
         sample = {"image": image, "image_id": idx}
 
         if not self.test_mode:
-            mask_path = self.masks_paths[idx]
             target = self._read_target(mask_path)
             sample.update(target)
 
         return self._apply_transform(self.augment, sample)
 
     def get_img_name(self, idx):
-        return str(self.img_paths[idx].name)
+        return str(self.paths[idx][0].name)
 
     def _read_target(self, mask_path: Union[str, Path]) -> Dict[str, np.ndarray]:
         # Each color of mask corresponds to a different instance with 0 being the background
         mask = np.array(Image.open(mask_path))
 
-        # Remove background id
         obj_ids = np.unique(mask)
+
+        if len(obj_ids) == 1 and obj_ids[0] == 0:
+            return {
+                "bboxes": np.empty((0, 4)),
+                "labels": np.empty(0, np.int64),
+                "masks": np.empty((0, *mask.shape[-2:])),
+                "area": 0.0,
+                "iscrowd": np.empty(0, np.int64),
+            }
+
+        # Remove background id
         obj_ids = obj_ids[1:]
 
         # Split the color-encoded masks into a set of binary masks
