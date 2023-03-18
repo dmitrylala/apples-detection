@@ -7,6 +7,8 @@ from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset
 from torchtext.utils import download_from_url, extract_archive
 
+from apples_detection.utils import add_leading_zeros
+
 from .components import MinneAppleDetectionDataset
 
 DOWNLOAD_URL = "https://conservancy.umn.edu/bitstream/handle/11299/206575/detection.tar.gz"
@@ -15,20 +17,6 @@ TOTAL_IMAGES_AND_MASKS = 1671
 
 def collate_fn(batch):
     return tuple(zip(*batch))
-
-
-def split_by_right_num(string):
-    head = string.rstrip("0123456789")
-    tail = string[len(head) :]
-    return head, tail
-
-
-def add_leading_zeros(path: Path, n_zeros: int = 5, delim: str = "_") -> Path:
-    parent, name, suffix = path.parent, path.stem, path.suffix
-    *name_parts, last_part = name.split(delim)
-    prefix, old_num = split_by_right_num(last_part)
-    new_num = f"{int(old_num):0{n_zeros}d}"
-    return Path(parent, delim.join([*name_parts, prefix + new_num])).with_suffix(suffix)
 
 
 class MinneAppleDetectionModule(pl.LightningDataModule):
@@ -64,6 +52,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         val_groups: Tuple[str] = ("20150919",),
         batch_size: int = 2,
         num_workers: int = 1,
+        use_patches: bool = False,
         normalize: bool = False,
         flip: bool = True,
         rescale: bool = False,
@@ -136,16 +125,17 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         careful not to execute things like random split twice!
         """
         # load and split datasets only if not loaded already
+        train_mode = "train-patches" if self.hparams.use_patches else "train"
         if not self.data_train and not self.data_val and not self.data_test:
             self.data_train = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
-                mode="train",
+                mode=train_mode,
                 transform=self.train_transforms,
                 groups=self.hparams.train_groups,
             )
             self.data_val = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
-                mode="train",
+                mode=train_mode,
                 transform=self.val_transforms,
                 groups=self.hparams.val_groups,
             )
@@ -197,6 +187,9 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
 
     def load_state_dict(self, state_dict: Dict[str, Any]):
         """Things to do when loading checkpoint."""
+
+    def __repr__(self) -> str:
+        return f"MinneAppleDetectionModule({self.hparams!r})"
 
 
 if __name__ == "__main__":
