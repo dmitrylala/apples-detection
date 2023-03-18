@@ -35,8 +35,7 @@ log = utils.get_pylogger(__name__)
 
 @utils.task_wrapper
 def patchify(cfg: DictConfig) -> None:
-    """
-    Patchify existing dataset and create new one.
+    """Patchify existing dataset and create new one.
 
     This method is wrapped in optional @task_wrapper decorator which applies extra utilities
     before and after the call.
