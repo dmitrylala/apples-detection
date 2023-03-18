@@ -155,3 +155,6 @@ configs/local/default.yaml
 
 # Wandb logs
 wandb/
+
+# minneapple experiments
+configs/experiment/**minneapple**.yaml
