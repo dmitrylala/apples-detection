@@ -4,7 +4,6 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import MaxMetric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-
 from wandb import Image
 
 
