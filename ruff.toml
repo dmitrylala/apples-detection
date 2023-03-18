@@ -33,3 +33,4 @@ convention = "google"
 
 [pylint]
 max-args = 7
+allow-magic-value-types = ["int", "str", "bytes", "float"]

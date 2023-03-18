@@ -4,7 +4,6 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import MaxMetric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-
 from wandb import Image
 
 
@@ -131,12 +130,13 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         batch_size = len(images)
         preds = self.forward(images)
 
-        run = self.logger.experiment
-        batch_size = len(images)
-        for i, (image, target, pred) in enumerate(zip(images, targets, preds)):
-            wandb_image = to_wandb_image(image, pred, target)
-            image_id = f"valid_{batch_idx * batch_size + i}"
-            run.log({image_id: wandb_image})
+        if self.logger:
+            run = self.logger.experiment
+            batch_size = len(images)
+            for i, (image, target, pred) in enumerate(zip(images, targets, preds)):
+                wandb_image = to_wandb_image(image, pred, target)
+                image_id = f"valid_{batch_idx * batch_size + i}"
+                run.log({image_id: wandb_image})
 
         metrics = self.val_acc(preds, targets)
         self.log_dict(

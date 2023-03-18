@@ -38,8 +38,8 @@ sh = "^2.0.2"
 pytest-cov = "^4.0.0"
 ipykernel = "^6.21.2"
 matplotlib = "^3.7.0"
-ruff = "^0.0.254"
 black = "^23.1.0"
+ruff = "^0.0.257"
 
 [tool.pytest.ini_options]
 markers = [

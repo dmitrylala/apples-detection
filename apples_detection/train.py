@@ -87,7 +87,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("test"):
         log.info("Starting testing!")
         ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
+        if not ckpt_path:
             log.warning("Best ckpt not found! Using current weights for testing...")
             ckpt_path = None
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
@@ -114,5 +114,4 @@ def main(cfg: DictConfig) -> Optional[float]:
 
 
 if __name__ == "__main__":
-    # pylint: disable = no-value-for-parameter
     main()
