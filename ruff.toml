@@ -26,7 +26,7 @@ namespace-packages = ["apples_detection"]
 "apples_detection/data/minneapple.py" = ["ARG002"]
 "apples_detection/data/mnist.py" = ["ARG002"]
 "apples_detection/models/mnist_module.py" = ["ARG002"]
-"apples_detection/models/minneapple_detection.py" = ["ARG002"]
+"apples_detection/models/minneapple_detection.py" = ["ARG002", "I001"]
 
 [pydocstyle]
 convention = "google"
