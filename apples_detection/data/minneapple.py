@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -87,11 +88,20 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             transforms,
             bbox_params={"format": "pascal_voc", "label_fields": ["labels"]},
         )
-        self.test_transforms = Compose(transforms)
+        self.predict_transforms = Compose(transforms)
+
+        self.dl_factory = partial(
+            DataLoader,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            collate_fn=collate_fn,
+            persistent_workers=persistent_workers,
+        )
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
-        self.data_test: Optional[Dataset] = None
+        self.data_predict: Optional[Dataset] = None
 
     def prepare_data(self):
         """Download data if needed.
@@ -121,65 +131,53 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
 
+        stage: either 'fit', 'validate', 'test', or 'predict'
+
         This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
         careful not to execute things like random split twice!
         """
-        # load and split datasets only if not loaded already
         train_mode = "train-patches" if self.hparams.use_patches else "train"
-        if not self.data_train and not self.data_val and not self.data_test:
+
+        if stage == "fit":
             self.data_train = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
                 mode=train_mode,
                 transform=self.train_transforms,
                 groups=self.hparams.train_groups,
             )
+        elif stage == "validate":
             self.data_val = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
                 mode=train_mode,
                 transform=self.val_transforms,
                 groups=self.hparams.val_groups,
             )
-            self.data_test = MinneAppleDetectionDataset(
+        elif stage == "predict":
+            self.data_predict = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
                 mode="test",
-                transform=self.test_transforms,
+                transform=self.predict_transforms,
             )
+        else:
+            raise ValueError(f"Not expected stage: {stage}")
 
     def train_dataloader(self):
-        return DataLoader(
+        return self.dl_factory(
             dataset=self.data_train,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
             shuffle=True,
-            collate_fn=collate_fn,
-            persistent_workers=self.hparams.persistent_workers,
         )
 
     def val_dataloader(self):
-        return DataLoader(
+        return self.dl_factory(
             dataset=self.data_val,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            collate_fn=collate_fn,
-            persistent_workers=self.hparams.persistent_workers,
         )
 
-    def test_dataloader(self):
-        return DataLoader(
-            dataset=self.data_test,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+    def predict_dataloader(self):
+        return self.dl_factory(
+            dataset=self.data_predict,
             shuffle=False,
-            collate_fn=collate_fn,
-            persistent_workers=self.hparams.persistent_workers,
         )
-
-    def teardown(self, stage: Optional[str] = None):
-        """Clean up after fit or test."""
 
     def state_dict(self):
         """Extra things to save to checkpoint."""

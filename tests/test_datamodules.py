@@ -49,20 +49,25 @@ def test_minneapple_detection():
     pl_module = MinneAppleDetectionModule(data_dir=data_dir)
     pl_module.prepare_data()
     assert data_dir.exists()
-    assert "batch_size" in pl_module.hparams
 
     assert not pl_module.data_train
-    assert not pl_module.data_val
-    assert not pl_module.data_test
-    pl_module.setup()
+    pl_module.setup("fit")
     assert pl_module.data_train
-    assert pl_module.data_val
-    assert pl_module.data_test
     assert pl_module.train_dataloader()
-    assert pl_module.val_dataloader()
-    assert pl_module.test_dataloader()
 
-    num_datapoints = len(pl_module.data_train) + len(pl_module.data_val) + len(pl_module.data_test)
+    assert not pl_module.data_val
+    pl_module.setup("validate")
+    assert pl_module.data_val
+    assert pl_module.val_dataloader()
+
+    assert not pl_module.data_predict
+    pl_module.setup("predict")
+    assert pl_module.data_predict
+    assert pl_module.predict_dataloader()
+
+    num_datapoints = (
+        len(pl_module.data_train) + len(pl_module.data_val) + len(pl_module.data_predict)
+    )
     assert num_datapoints == MINNEAPPLE_POINTS
 
     images, targets = next(iter(pl_module.train_dataloader()))
