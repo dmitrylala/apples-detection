@@ -73,6 +73,10 @@ def patchify(cfg: DictConfig) -> None:
             for j, (img_patch, mask_patch) in enumerate(zip(image_patches, masks_patches_colored)):
                 patch_suffix = f"_patch{j:05}"
 
+                n_instances = mask_patch.unique().shape[0] - 1
+                if n_instances < cfg.min_instances:
+                    continue
+
                 # save image patch
                 img_patch_save_to = utils.add_suffix(img_save_to, patch_suffix)
                 to_pil_image(img_patch).save(img_patch_save_to)
