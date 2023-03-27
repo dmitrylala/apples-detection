@@ -5,12 +5,13 @@ train_groups:
   - "20150921"
 val_groups:
   - "20150919"
-batch_size: 2
+
+batch_size: 8
 num_workers: 2
-
-normalize: False
-flip: False
-rescale: False
-
 pin_memory: True
 persistent_workers: True
+
+use_patches: True
+normalize: False
+flip: True
+rescale: False
