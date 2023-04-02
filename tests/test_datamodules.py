@@ -50,15 +50,15 @@ def test_minneapple_detection():
     pl_module.prepare_data()
     assert data_dir.exists()
 
-    assert not pl_module.data_train
-    pl_module.setup("fit")
-    assert pl_module.data_train
-    assert pl_module.train_dataloader()
-
     assert not pl_module.data_val
     pl_module.setup("validate")
     assert pl_module.data_val
     assert pl_module.val_dataloader()
+
+    assert not pl_module.data_train
+    pl_module.setup("fit")
+    assert pl_module.data_train
+    assert pl_module.train_dataloader()
 
     assert not pl_module.data_predict
     pl_module.setup("predict")

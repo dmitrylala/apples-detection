@@ -136,7 +136,18 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
         careful not to execute things like random split twice!
         """
+        if stage not in {"fit", "validate", "predict"}:
+            raise ValueError(f"Not expected stage: {stage}")
+
         train_mode = "train-patches" if self.hparams.use_patches else "train"
+
+        if stage in {"fit", "validate"}:
+            self.data_val = MinneAppleDetectionDataset(
+                self.hparams.data_dir,
+                mode=train_mode,
+                transform=self.val_transforms,
+                groups=self.hparams.val_groups,
+            )
 
         if stage == "fit":
             self.data_train = MinneAppleDetectionDataset(
@@ -145,28 +156,12 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
                 transform=self.train_transforms,
                 groups=self.hparams.train_groups,
             )
-
-            self.data_val = MinneAppleDetectionDataset(
-                self.hparams.data_dir,
-                mode=train_mode,
-                transform=self.val_transforms,
-                groups=self.hparams.val_groups,
-            )
-        elif stage == "validate":
-            self.data_val = MinneAppleDetectionDataset(
-                self.hparams.data_dir,
-                mode=train_mode,
-                transform=self.val_transforms,
-                groups=self.hparams.val_groups,
-            )
         elif stage == "predict":
             self.data_predict = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
                 mode="test",
                 transform=self.predict_transforms,
             )
-        else:
-            raise ValueError(f"Not expected stage: {stage}")
 
     def train_dataloader(self):
         return self.dl_factory(
