@@ -80,11 +80,11 @@ class MinneAppleDetectionDataset(ImageDataset):
 
         if len(obj_ids) == 1 and obj_ids[0] == 0:
             return {
-                "bboxes": np.empty((0, 4)),
-                "labels": np.empty(0, np.int64),
-                "masks": np.empty((0, *mask.shape[-2:])),
-                "area": 0.0,
-                "iscrowd": np.empty(0, np.int64),
+                "bboxes": np.zeros((0, 4)),
+                "labels": np.zeros(0, np.int64),
+                "masks": np.zeros((0, *mask.shape[-2:])),
+                "area": np.zeros(0),
+                "iscrowd": np.zeros(0, np.int64),
             }
 
         # Remove background id
@@ -116,7 +116,7 @@ class MinneAppleDetectionDataset(ImageDataset):
             boxes.append([xmin, ymin, xmax, ymax])
             good_obj += 1
 
-        boxes = np.array(boxes, dtype=np.int32)
+        boxes = np.array(boxes, dtype=np.int32).reshape(-1, 4)
 
         # There is only one class (apples)
         labels = np.ones((good_obj,), dtype=np.int64)
@@ -146,12 +146,17 @@ class MinneAppleDetectionDataset(ImageDataset):
 
         if not self.test_mode:
             sample["bboxes"] = torch.from_numpy(np.array(sample["bboxes"])).float()
+            if sample["bboxes"].shape == torch.Size([0]):
+                sample["bboxes"] = torch.zeros((0, 4), dtype=torch.float32)
+                sample["masks"] = torch.zeros((0, *sample["image"].shape[-2:])).to(torch.uint8)
+            else:
+                sample["masks"] = torch.stack(sample["masks"]).to(torch.uint8)
+
             sample["area"] = torch.from_numpy(sample["area"]).float()
             sample["iscrowd"] = torch.from_numpy(sample["iscrowd"]).float()
 
             sample["labels"] = torch.from_numpy(np.array(sample["labels"])).long()
             sample["image_id"] = torch.tensor(sample["image_id"]).int()
-            sample["masks"] = torch.stack(sample["masks"]).to(torch.uint8)
 
             return sample["image"], {
                 "boxes": sample["bboxes"],

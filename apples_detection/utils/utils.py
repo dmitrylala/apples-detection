@@ -1,7 +1,7 @@
 import warnings
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, Dict, List
 
 import hydra
 import torch
@@ -9,6 +9,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import Callback
 from pytorch_lightning.loggers import Logger
 from pytorch_lightning.utilities import rank_zero_only
+from wandb import Image
 
 from apples_detection.utils import pylogger, rich_utils
 
@@ -241,3 +242,64 @@ def reverse_one_hot(x: torch.Tensor) -> torch.Tensor:
     for i, instance_mask in enumerate(instances_first):
         result[instance_mask == 1] = i
     return result
+
+
+def targets_to_cpu(targets: List[Dict[str, torch.Tensor]]) -> List[Dict[str, torch.Tensor]]:
+    return [{k: v.cpu().detach().clone() for k, v in target.items()} for target in targets]
+
+
+def to_wandb_image(
+    image: torch.Tensor,
+    pred: Dict[str, torch.Tensor],
+    target: Dict[str, torch.Tensor],
+) -> Image:
+    return Image(
+        image,
+        boxes={
+            "predictions": {
+                "box_data": [
+                    {
+                        # bbox is in format [xmin, ymin, xmax, ymax]
+                        "position": {
+                            "minX": bbox[0].item(),
+                            "maxX": bbox[2].item(),
+                            "minY": bbox[1].item(),
+                            "maxY": bbox[3].item(),
+                        },
+                        "class_id": label.item(),
+                        "scores": {
+                            "score": score.item(),
+                        },
+                        "domain": "pixel",
+                        "box_caption": "apple",
+                    }
+                    for bbox, score, label in zip(pred["boxes"], pred["scores"], pred["labels"])
+                ],
+                "class_labels": {
+                    0: "background",
+                    1: "apple",
+                },
+            },
+            "ground_truth": {
+                "box_data": [
+                    {
+                        # bbox is in format [xmin, ymin, xmax, ymax]
+                        "position": {
+                            "minX": bbox[0].item(),
+                            "maxX": bbox[2].item(),
+                            "minY": bbox[1].item(),
+                            "maxY": bbox[3].item(),
+                        },
+                        "class_id": label.item(),
+                        "domain": "pixel",
+                        "box_caption": "apple",
+                    }
+                    for bbox, label in zip(target["boxes"], target["labels"])
+                ],
+                "class_labels": {
+                    0: "background",
+                    1: "apple",
+                },
+            },
+        },
+    )

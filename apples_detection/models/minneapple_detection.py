@@ -2,66 +2,10 @@ from typing import Any, Dict, List, Optional
 
 import pytorch_lightning as pl
 import torch
-from torchmetrics import MaxMetric, MetricCollection
+from torchmetrics import MaxMetric, MinMetric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from wandb import Image
 
-
-def to_wandb_image(
-    image: torch.Tensor,
-    pred: Dict[str, torch.Tensor],
-    target: Dict[str, torch.Tensor],
-) -> Image:
-    return Image(
-        image,
-        boxes={
-            "predictions": {
-                "box_data": [
-                    {
-                        # bbox is in format [xmin, ymin, xmax, ymax]
-                        "position": {
-                            "minX": bbox[0].item(),
-                            "maxX": bbox[2].item(),
-                            "minY": bbox[1].item(),
-                            "maxY": bbox[3].item(),
-                        },
-                        "class_id": label.item(),
-                        "scores": {
-                            "score": score.item(),
-                        },
-                        "domain": "pixel",
-                        "box_caption": "apple",
-                    }
-                    for bbox, score, label in zip(pred["boxes"], pred["scores"], pred["labels"])
-                ],
-                "class_labels": {
-                    0: "background",
-                    1: "apple",
-                },
-            },
-            "ground_truth": {
-                "box_data": [
-                    {
-                        # bbox is in format [xmin, ymin, xmax, ymax]
-                        "position": {
-                            "minX": bbox[0].item(),
-                            "maxX": bbox[2].item(),
-                            "minY": bbox[1].item(),
-                            "maxY": bbox[3].item(),
-                        },
-                        "class_id": label.item(),
-                        "domain": "pixel",
-                        "box_caption": "apple",
-                    }
-                    for bbox, label in zip(target["boxes"], target["labels"])
-                ],
-                "class_labels": {
-                    0: "background",
-                    1: "apple",
-                },
-            },
-        },
-    )
+from apples_detection.utils import targets_to_cpu, to_wandb_image
 
 
 class MinneAppleDetectionLitModule(pl.LightningModule):
@@ -91,6 +35,7 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
 
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
+        self.val_acc_worst = MinMetric()
 
     def forward(self, x: List[torch.Tensor], y: Optional[List[Dict[str, torch.Tensor]]] = None):
         return self.net(x, y)
@@ -130,14 +75,6 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         batch_size = len(images)
         preds = self.forward(images)
 
-        if self.logger:
-            run = self.logger.experiment
-            batch_size = len(images)
-            for i, (image, target, pred) in enumerate(zip(images, targets, preds)):
-                wandb_image = to_wandb_image(image, pred, target)
-                image_id = f"valid_{batch_idx * batch_size + i}"
-                run.log({image_id: wandb_image})
-
         metrics = self.val_acc(preds, targets)
         self.log_dict(
             metrics,
@@ -149,7 +86,13 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
             logger=True,
         )
 
-        return metrics
+        return {
+            **metrics,
+            "images": [image.cpu().detach() for image in images],
+            "targets": targets_to_cpu(targets),
+            "preds": targets_to_cpu(preds),
+            "batch_idx": batch_idx,
+        }
 
     def validation_epoch_end(self, outputs: List[Any]):
         metrics = self.val_acc.compute()
@@ -158,7 +101,44 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         self.log_dict(metrics, prog_bar=True, sync_dist=True, logger=True)
         self.log("best_val_map", self.val_acc_best, prog_bar=True, sync_dist=True, logger=True)
 
+        if self.logger:
+            min_batch_val_map = 1.0
+            idx = 0
+            for i, output in enumerate(outputs):
+                val_map = output["val/map"]
+                if val_map < min_batch_val_map:
+                    min_batch_val_map = val_map
+                    idx = i
+
+            min_output = outputs[idx]
+            images, targets, preds, batch_idx, val_map_worst = (
+                min_output["images"],
+                min_output["targets"],
+                min_output["preds"],
+                min_output["batch_idx"],
+                min_output["val/map"],
+            )
+
+            self.val_acc_worst(val_map_worst)
+            self.log_images(images, targets, preds, batch_idx)
+
         self.val_acc.reset()
+
+    def log_images(
+        self,
+        images: torch.Tensor,
+        targets: List[Dict[str, torch.Tensor]],
+        preds: List[Dict[str, torch.Tensor]],
+        batch_idx: int,
+    ):
+        assert self.logger
+
+        batch_size = len(images)
+        run = self.logger.experiment
+        for i, (image, target, pred) in enumerate(zip(images, targets, preds)):
+            wandb_image = to_wandb_image(image, pred, target)
+            image_id = f"valid_{batch_idx * batch_size + i}"
+            run.log({image_id: wandb_image})
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.

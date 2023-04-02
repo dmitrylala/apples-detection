@@ -145,6 +145,13 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
                 transform=self.train_transforms,
                 groups=self.hparams.train_groups,
             )
+
+            self.data_val = MinneAppleDetectionDataset(
+                self.hparams.data_dir,
+                mode=train_mode,
+                transform=self.val_transforms,
+                groups=self.hparams.val_groups,
+            )
         elif stage == "validate":
             self.data_val = MinneAppleDetectionDataset(
                 self.hparams.data_dir,

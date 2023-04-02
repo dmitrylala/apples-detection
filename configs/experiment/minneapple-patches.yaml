@@ -1,0 +1,31 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: minneapple
+  - override /model: minneapple
+  - override /trainer: gpu
+  - override /callbacks: default
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+logger:
+  wandb:
+    name: faster-rcnn-patches-anchors3
+    group: minneapple-patches
+    tags: [faster_rcnn, sgd, patches]
+
+seed: 42
+
+trainer:
+  max_epochs: 30
+
+callbacks:
+  model_checkpoint:
+    monitor: val/map
+
+  early_stopping:
+    monitor: val/map

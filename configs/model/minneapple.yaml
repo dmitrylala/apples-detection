@@ -2,7 +2,7 @@ _target_: apples_detection.models.minneapple_detection.MinneAppleDetectionLitMod
 
 net:
   _target_: apples_detection.models.components.faster_rcnn.FasterRCNN
-  weights: COCO_V1
+  weights: IMAGENET1K_V1
   num_classes: 2
   trainable_backbone_layers: 3
 
@@ -11,7 +11,7 @@ optimize_computations: false
 optimizer:
   _target_: torch.optim.SGD
   _partial_: true
-  lr: 0.001
+  lr: 0.005
   momentum: 0.9
   weight_decay: 0.0005
 # scheduler:
