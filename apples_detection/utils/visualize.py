@@ -45,27 +45,29 @@ def draw_predicts(
         sample_copy = {key: val.detach().cpu().clone() for key, val in target.items()}
         if "scores" in sample_copy:
             indices = sample_copy["scores"] > confidence_threshold
-            for key in ["boxes", "masks"]:
+            for key in sample_copy.keys() & ["boxes", "masks"]:
                 sample_copy[key] = sample_copy[key][indices]
 
-        # converting masks to boolean
-        bool_masks = sample_copy["masks"] > proba_threshold
-        bool_masks = bool_masks.squeeze(1)
+        if "masks" in sample_copy:
+            # converting masks to boolean
+            bool_masks = sample_copy["masks"] > proba_threshold
+            bool_masks = bool_masks.squeeze(1)
 
-        if torch.any(bool_masks):
-            to_visualize = draw_segmentation_masks(
-                to_visualize,
-                masks=bool_masks,
-                alpha=mask_alpha,
-                colors=mask_color,
-            )
-            if "boxes" in sample_copy:
-                to_visualize = draw_bounding_boxes(
+            if torch.any(bool_masks):
+                to_visualize = draw_segmentation_masks(
                     to_visualize,
-                    sample_copy["boxes"],
-                    colors=bbox_color,
-                    width=bbox_width,
+                    masks=bool_masks,
+                    alpha=mask_alpha,
+                    colors=mask_color,
                 )
+
+        if "boxes" in sample_copy:
+            to_visualize = draw_bounding_boxes(
+                to_visualize,
+                sample_copy["boxes"],
+                colors=bbox_color,
+                width=bbox_width,
+            )
 
         apples_visualization.append(to_visualize)
 
