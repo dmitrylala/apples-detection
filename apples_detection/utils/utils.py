@@ -1,6 +1,5 @@
 import warnings
 from importlib.util import find_spec
-from pathlib import Path
 from typing import Callable, Dict, List
 
 import hydra
@@ -209,24 +208,6 @@ def save_file(path: str, content: str) -> None:
     """Save file in rank zero mode (only on one process in multi-GPU setup)."""
     with open(path, "w+", encoding="utf-8") as file:
         file.write(content)
-
-
-def add_suffix(path: Path, suffix: str) -> Path:
-    return path.parent / (path.stem + suffix + path.suffix)
-
-
-def split_by_right_num(string):
-    head = string.rstrip("0123456789")
-    tail = string[len(head) :]
-    return head, tail
-
-
-def add_leading_zeros(path: Path, n_zeros: int = 5, delim: str = "_") -> Path:
-    parent, name, suffix = path.parent, path.stem, path.suffix
-    *name_parts, last_part = name.split(delim)
-    prefix, old_num = split_by_right_num(last_part)
-    new_num = f"{int(old_num):0{n_zeros}d}"
-    return Path(parent, delim.join([*name_parts, prefix + new_num])).with_suffix(suffix)
 
 
 def reverse_one_hot(x: torch.Tensor) -> torch.Tensor:
