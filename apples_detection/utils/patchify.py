@@ -2,6 +2,12 @@ import pickle
 from typing import List, Sequence, Tuple
 
 import torch
+from torchvision.transforms.functional import to_pil_image
+from tqdm import tqdm
+
+from apples_detection import utils
+from apples_detection.data.components.minneapple import MinneAppleDetectionDataset
+from apples_detection.data.components.utils import add_suffix
 
 
 def compute_stride(
@@ -95,3 +101,51 @@ class SmartPatchifier(Patchifier):
             overlap_policy,
         )
         super().__init__(kernel_size, strides)
+
+
+def patchify_detection_ds(
+    patchifier: Patchifier,
+    ds: MinneAppleDetectionDataset,
+    min_instances: int = 0,
+    has_target: bool = True,
+) -> None:
+    new_paths = ds.paths.append_suffix_to_root("-patches")
+    new_paths.root.mkdir(parents=True, exist_ok=True)
+    patchifier.save_to(new_paths.root / "patchifier.pkl")
+
+    if has_target:
+        for (image, target), (img_save_to, mask_save_to) in tqdm(zip(ds, new_paths)):
+            img_save_to.parent.mkdir(parents=True, exist_ok=True)
+            mask_save_to.parent.mkdir(parents=True, exist_ok=True)
+
+            image_patches = patchifier.patchify(image.unsqueeze(0))
+            masks_patches = patchifier.patchify(target["masks"].unsqueeze(0))
+
+            masks_patches_colored = utils.reverse_one_hot(masks_patches).type(torch.uint8)
+
+            for j, (img_patch, mask_patch) in enumerate(zip(image_patches, masks_patches_colored)):
+                patch_suffix = f"_patch{j:05}"
+
+                n_instances = mask_patch.unique().shape[0] - 1
+                if n_instances < min_instances:
+                    continue
+
+                # save image patch
+                img_patch_save_to = add_suffix(img_save_to, patch_suffix)
+                to_pil_image(img_patch).save(img_patch_save_to)
+
+                # save mask patch
+                mask_patch_save_to = add_suffix(mask_save_to, patch_suffix)
+                to_pil_image(mask_patch).save(mask_patch_save_to)
+    else:
+        for image, img_save_to in tqdm(zip(ds, new_paths)):
+            img_save_to.parent.mkdir(parents=True, exist_ok=True)
+
+            image_patches = patchifier.patchify(image.unsqueeze(0))
+
+            for j, img_patch in enumerate(image_patches):
+                patch_suffix = f"_patch{j:05}"
+
+                # save image patch
+                img_patch_save_to = add_suffix(img_save_to, patch_suffix)
+                to_pil_image(img_patch).save(img_patch_save_to)

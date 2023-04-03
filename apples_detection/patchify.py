@@ -3,11 +3,8 @@ from typing import Optional
 import hydra
 import pyrootutils
 import pytorch_lightning as pl
-import torch
 from omegaconf import DictConfig
 from pytorch_lightning import LightningDataModule
-from torchvision.transforms.functional import to_pil_image
-from tqdm import tqdm
 
 from apples_detection import utils
 
@@ -50,40 +47,17 @@ def patchify(cfg: DictConfig) -> None:
     log.info("Instantiating datamodule <%s>", cfg.data._target_)
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
     datamodule.prepare_data()
-    datamodule.setup()
 
     log.info("Instantiating patchifier <%s>", cfg.patchifier._target_)
     patchifier = hydra.utils.instantiate(cfg.patchifier)
     log.info("Patchifier <%r>", patchifier)
 
+    datamodule.setup("fit")
     for ds in (datamodule.data_train, datamodule.data_val):
-        new_paths = ds.paths.append_suffix_to_root("-patches")
-        new_paths.root.mkdir(parents=True, exist_ok=True)
-        patchifier.save_to(new_paths.root / "patchifier.pkl")
+        utils.patchify_detection_ds(patchifier, ds)
 
-        for (image, target), (img_save_to, mask_save_to) in tqdm(zip(ds, new_paths)):
-            img_save_to.parent.mkdir(parents=True, exist_ok=True)
-            mask_save_to.parent.mkdir(parents=True, exist_ok=True)
-
-            image_patches = patchifier.patchify(image.unsqueeze(0))
-            masks_patches = patchifier.patchify(target["masks"].unsqueeze(0))
-
-            masks_patches_colored = utils.reverse_one_hot(masks_patches).type(torch.uint8)
-
-            for j, (img_patch, mask_patch) in enumerate(zip(image_patches, masks_patches_colored)):
-                patch_suffix = f"_patch{j:05}"
-
-                n_instances = mask_patch.unique().shape[0] - 1
-                if n_instances < cfg.min_instances:
-                    continue
-
-                # save image patch
-                img_patch_save_to = utils.add_suffix(img_save_to, patch_suffix)
-                to_pil_image(img_patch).save(img_patch_save_to)
-
-                # save mask patch
-                mask_patch_save_to = utils.add_suffix(mask_save_to, patch_suffix)
-                to_pil_image(mask_patch).save(mask_patch_save_to)
+    datamodule.setup("predict")
+    utils.patchify_detection_ds(patchifier, datamodule.data_predict, has_target=False)
 
 
 @hydra.main(version_base="1.3", config_path="../configs", config_name="patchify")
