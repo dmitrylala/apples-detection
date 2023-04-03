@@ -16,7 +16,9 @@ TOTAL_IMAGES_AND_MASKS = 1671
 
 
 def collate_fn(batch):
-    return tuple(zip(*batch))
+    if len(batch[0]) == 2: 
+        return tuple(zip(*batch))
+    return (batch,)
 
 
 class MinneAppleDetectionModule(pl.LightningDataModule):
@@ -177,7 +179,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
 
     def predict_dataloader(self):
         return self.dl_factory(
-            dataset=self.data_val,
+            dataset=self.data_predict,
             shuffle=False,
         )
 

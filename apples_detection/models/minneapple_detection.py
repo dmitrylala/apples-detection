@@ -125,10 +125,10 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         self.val_acc.reset()
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
-        if isinstance(batch, tuple) and len(batch) == 2:
+        if len(batch) == 2:
             images, _ = batch
         else:
-            images = batch
+            [images] = batch
         return self.forward(images)
 
     def log_images(
