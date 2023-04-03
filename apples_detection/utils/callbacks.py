@@ -27,5 +27,5 @@ class DetectionsWriter(BasePredictionWriter):
         batch_idx: int,
         dataloader_idx: int,
     ) -> None:
-        torch.save(prediction, self.output_dir / f"predictions_{batch_idx}.pt")
-        torch.save(batch_indices, self.output_dir / f"batch_indices_{batch_idx}.pt")
+        torch.save(prediction, self.output_dir / f"predictions_{batch_idx:05}.pt")
+        torch.save(batch_indices, self.output_dir / f"batch_indices_{batch_idx:05}.pt")
