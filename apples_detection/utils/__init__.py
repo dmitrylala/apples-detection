@@ -1,8 +1,10 @@
-from .patchify import Patchifier, SmartPatchifier
+from .patchify import (
+    Patchifier,
+    SmartPatchifier,
+    patchify_detection_ds,
+)
 from .pylogger import get_pylogger
 from .utils import (
-    add_leading_zeros,
-    add_suffix,
     get_metric_value,
     instantiate_callbacks,
     instantiate_loggers,
