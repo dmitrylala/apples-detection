@@ -45,6 +45,9 @@ def predict(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Instantiating datamodule <%s>", cfg.data._target_)
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
+    datamodule.prepare_data()
+    datamodule.setup("fit")
+    datamodule.setup("predict")
 
     log.info("Instantiating model <%s>", cfg.model._target_)
     model: LightningModule = hydra.utils.instantiate(cfg.model)
@@ -74,7 +77,7 @@ def predict(cfg: DictConfig) -> Tuple[dict, dict]:
 
     trainer.predict(
         model=model,
-        dataloaders=[datamodule.predict_dataloader()],
+        datamodule=datamodule,
         ckpt_path=cfg.ckpt_path,
         return_predictions=False,
     )
