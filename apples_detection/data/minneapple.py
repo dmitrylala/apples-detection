@@ -8,9 +8,8 @@ from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset
 from torchtext.utils import download_from_url, extract_archive
 
-from apples_detection.utils import add_leading_zeros
-
 from .components import MinneAppleDetectionDataset
+from .components.utils import add_leading_zeros
 
 DOWNLOAD_URL = "https://conservancy.umn.edu/bitstream/handle/11299/206575/detection.tar.gz"
 TOTAL_IMAGES_AND_MASKS = 1671
@@ -140,6 +139,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             raise ValueError(f"Not expected stage: {stage}")
 
         train_mode = "train-patches" if self.hparams.use_patches else "train"
+        test_mode = "test-patches" if self.hparams.use_patches else "test"
 
         if stage in {"fit", "validate"}:
             self.data_val = MinneAppleDetectionDataset(
@@ -159,7 +159,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         elif stage == "predict":
             self.data_predict = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
-                mode="test",
+                mode=test_mode,
                 transform=self.predict_transforms,
             )
 
@@ -177,7 +177,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
 
     def predict_dataloader(self):
         return self.dl_factory(
-            dataset=self.data_predict,
+            dataset=self.data_val,
             shuffle=False,
         )
 
