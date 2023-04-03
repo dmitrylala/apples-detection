@@ -21,7 +21,7 @@ class MinneAppleDetectionDataset(ImageDataset):
         augment: Optional[Union[BasicTransform, BaseCompose]] = None,
         input_dtype: str = "float32",
     ) -> None:
-        test_mode = mode == "test"
+        test_mode = "test" in mode
         super().__init__(transform, augment, input_dtype, test_mode=test_mode)
 
         root = Path(rootdir) / mode
@@ -59,7 +59,10 @@ class MinneAppleDetectionDataset(ImageDataset):
             sample['target'] - Target class.
             sample['index'] - Index.
         """
-        img_path, mask_path = self.paths[idx]
+        if self.test_mode:
+            img_path = self.paths[idx]
+        else:
+            img_path, mask_path = self.paths[idx]
         image = self._read_image(img_path)
         sample = {"image": image, "image_id": idx}
 
