@@ -37,7 +37,11 @@ def draw_predicts(
     apples_visualization = []
 
     for image, target in apple_data:
-        to_visualize = image.to(torch.uint8).detach().cpu()
+        to_visualize = image.detach().cpu()
+        if torch.max(to_visualize) <= 1.0:
+            to_visualize *= 255
+        to_visualize = to_visualize.to(torch.uint8)
+
         if "masks" not in target and "boxes" not in target:
             apples_visualization.append(to_visualize)
             continue
