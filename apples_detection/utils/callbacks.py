@@ -15,6 +15,7 @@ class DetectionsWriter(BasePredictionWriter):
         assert write_interval == "batch", "Only batch interval is supported"
         super().__init__(write_interval)
         self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def write_on_batch_end(
         self,
