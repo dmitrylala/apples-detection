@@ -83,6 +83,7 @@ def draw_predicts(
 def visualize_apples(
     apple_data: List[Tuple[torch.Tensor, Dict[str, torch.Tensor]]],
     proba_threshold=0.5,
+    confidence_threshold=0.5,
     bbox_width=4,
     bbox_color="red",
     mask_alpha=0.7,
@@ -96,5 +97,6 @@ def visualize_apples(
         bbox_width,
         bbox_color,
         mask_alpha,
+        confidence_threshold=confidence_threshold,
     )
     show(make_grid(apples_visualization, nrow=nrow), figsize=figsize, save=save)
