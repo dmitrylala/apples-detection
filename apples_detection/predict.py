@@ -3,7 +3,7 @@ from typing import List, Tuple
 import hydra
 import pyrootutils
 from omegaconf import DictConfig
-from pytorch_lightning import LightningDataModule, LightningModule, Trainer
+from pytorch_lightning import Callback, LightningDataModule, LightningModule, Trainer
 from pytorch_lightning.loggers import Logger
 
 from apples_detection import utils
@@ -31,17 +31,14 @@ log = utils.get_pylogger(__name__)
 
 
 @utils.task_wrapper
-def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
-    """Evaluates given checkpoint on a datamodule testset.
+def predict(cfg: DictConfig) -> Tuple[dict, dict]:
+    """Get predictions from datamodule predict set
 
     This method is wrapped in optional @task_wrapper decorator which applies extra utilities
     before and after the call.
 
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
-
-    Returns:
-        Tuple[dict, dict]: Dict with metrics and dict with all instantiated objects.
     """
 
     assert cfg.ckpt_path
@@ -52,11 +49,14 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info("Instantiating model <%s>", cfg.model._target_)
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
+    log.info("Instantiating callbacks...")
+    callbacks: List[Callback] = utils.instantiate_callbacks(cfg.get("callbacks"))
+
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_loggers(cfg.get("logger"))
 
     log.info("Instantiating trainer <%s>", cfg.trainer._target_)
-    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
+    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
     object_dict = {
         "cfg": cfg,
@@ -70,17 +70,19 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
         log.info("Logging hyperparameters!")
         utils.log_hyperparameters(object_dict)
 
-    log.info("Starting testing!")
-    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
+    log.info("Starting predicting!")
 
-    metric_dict = trainer.callback_metrics
+    trainer.predict(
+        model=model,
+        dataloaders=[datamodule.predict_dataloader()],
+        ckpt_path=cfg.ckpt_path,
+        return_predictions=False,
+    )
 
-    return metric_dict, object_dict
 
-
-@hydra.main(version_base="1.3", config_path="../configs", config_name="eval")
+@hydra.main(version_base="1.3", config_path="../configs", config_name="predict")
 def main(cfg: DictConfig) -> None:
-    evaluate(cfg)
+    predict(cfg)
 
 
 if __name__ == "__main__":
