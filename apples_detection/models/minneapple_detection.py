@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 import pytorch_lightning as pl
 import torch
-from torchmetrics import MaxMetric, MinMetric, MetricCollection
+from torchmetrics import MaxMetric, MetricCollection, MinMetric
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from apples_detection.utils import targets_to_cpu, to_wandb_image
@@ -123,6 +123,13 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
             self.log_images(images, targets, preds, batch_idx)
 
         self.val_acc.reset()
+
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
+        if isinstance(batch, tuple) and len(batch) == 2:
+            images, _ = batch
+        else:
+            images = batch
+        return self.forward(images)
 
     def log_images(
         self,
