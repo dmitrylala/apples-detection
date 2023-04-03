@@ -1,0 +1,4 @@
+predict_writer:
+  _target_: apples_detection.utils.callbacks.DetectionsWriter
+  output_dir: ${paths.data_dir}minneapple-detection/train-patches/preds
+  write_interval: batch
