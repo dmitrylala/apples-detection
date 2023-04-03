@@ -32,7 +32,7 @@ log = utils.get_pylogger(__name__)
 
 @utils.task_wrapper
 def predict(cfg: DictConfig) -> Tuple[dict, dict]:
-    """Get predictions from datamodule predict set
+    """Get predictions from datamodule predict set.
 
     This method is wrapped in optional @task_wrapper decorator which applies extra utilities
     before and after the call.
