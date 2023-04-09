@@ -108,8 +108,9 @@ def patchify_detection_ds(
     ds: MinneAppleDetectionDataset,
     min_instances: int = 0,
     has_target: bool = True,
+    suffix: str = "-patches",
 ) -> None:
-    new_paths = ds.paths.append_suffix_to_root("-patches")
+    new_paths = ds.paths.append_suffix_to_root(suffix)
     new_paths.root.mkdir(parents=True, exist_ok=True)
     patchifier.save_to(new_paths.root / "patchifier.pkl")
 

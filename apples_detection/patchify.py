@@ -54,10 +54,19 @@ def patchify(cfg: DictConfig) -> None:
 
     datamodule.setup("fit")
     for ds in (datamodule.data_train, datamodule.data_val):
-        utils.patchify_detection_ds(patchifier, ds)
+        utils.patchify_detection_ds(
+            patchifier,
+            ds,
+            suffix=cfg.suffix,
+        )
 
     datamodule.setup("predict")
-    utils.patchify_detection_ds(patchifier, datamodule.data_predict, has_target=False)
+    utils.patchify_detection_ds(
+        patchifier,
+        datamodule.data_predict,
+        has_target=False,
+        suffix=cfg.suffix,
+    )
 
 
 @hydra.main(version_base="1.3", config_path="../configs", config_name="patchify")
