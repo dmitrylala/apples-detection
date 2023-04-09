@@ -53,12 +53,19 @@ def patchify(cfg: DictConfig) -> None:
     log.info("Patchifier <%r>", patchifier)
 
     datamodule.setup("fit")
-    for ds in (datamodule.data_train, datamodule.data_val):
-        utils.patchify_detection_ds(
-            patchifier,
-            ds,
-            suffix=cfg.suffix,
-        )
+
+    utils.patchify_detection_ds(
+        patchifier,
+        datamodule.data_train,
+        min_instances=cfg.min_train_instances,
+        suffix=cfg.suffix,
+    )
+
+    utils.patchify_detection_ds(
+        patchifier,
+        datamodule.data_val,
+        suffix=cfg.suffix,
+    )
 
     datamodule.setup("predict")
     utils.patchify_detection_ds(

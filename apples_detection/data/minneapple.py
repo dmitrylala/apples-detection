@@ -16,7 +16,7 @@ TOTAL_IMAGES_AND_MASKS = 1671
 
 
 def collate_fn(batch):
-    if len(batch[0]) == 2: 
+    if len(batch[0]) == 2:
         return tuple(zip(*batch))
     return (batch,)
 
@@ -54,7 +54,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         val_groups: Tuple[str] = ("20150919",),
         batch_size: int = 2,
         num_workers: int = 1,
-        use_patches: bool = False,
+        patches_suffix: str = "",
         normalize: bool = False,
         flip: bool = True,
         rescale: bool = False,
@@ -140,8 +140,8 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         if stage not in {"fit", "validate", "predict"}:
             raise ValueError(f"Not expected stage: {stage}")
 
-        train_mode = "train-patches" if self.hparams.use_patches else "train"
-        test_mode = "test-patches" if self.hparams.use_patches else "test"
+        train_mode = "train" + self.hparams.patches_suffix
+        test_mode = "test" + self.hparams.patches_suffix
 
         if stage in {"fit", "validate"}:
             self.data_val = MinneAppleDetectionDataset(

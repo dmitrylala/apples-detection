@@ -14,11 +14,15 @@ defaults:
 
 logger:
   wandb:
-    name: faster-rcnn-patches-anchors3
+    name: faster-rcnn-patches-max
     group: minneapple-patches
-    tags: [faster_rcnn, sgd, patches]
+    tags: [faster_rcnn, sgd, patches-max]
 
 seed: 42
+
+data:
+  patches_suffix: "-patches-max"
+  flip: True
 
 trainer:
   max_epochs: 30

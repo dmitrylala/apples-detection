@@ -20,7 +20,7 @@ defaults:
 # task name, determines output directory path
 task_name: patchify
 
-min_instances: 4
+min_train_instances: 4
 suffix: -patches
 
 # tags to help you identify your experiments
