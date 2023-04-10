@@ -16,4 +16,4 @@ task_name: predict
 tags: [dev]
 
 # passing checkpoint path is necessary for getting predictions
-ckpt_path: ${paths.models_dir}best_model_27.03.23.ckpt
+ckpt_path: ${paths.models_dir}best_faster_rcnn_09.04.23.ckpt

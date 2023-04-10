@@ -1,4 +1,4 @@
 predict_writer:
   _target_: apples_detection.utils.callbacks.DetectionsWriter
-  output_dir: ${paths.data_dir}minneapple-detection/test-patches/preds
+  output_dir: ${paths.data_dir}minneapple-detection/test/preds
   write_interval: batch

@@ -64,6 +64,7 @@ def patchify(cfg: DictConfig) -> None:
     utils.patchify_detection_ds(
         patchifier,
         datamodule.data_val,
+        min_instances=cfg.min_train_instances,
         suffix=cfg.suffix,
     )
 
