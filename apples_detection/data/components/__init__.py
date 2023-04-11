@@ -1,1 +1,1 @@
-from .minneapple import MinneAppleDetectionDataset
+from .minneapple import MinneAppleDetectionDataset, MinneAppleDetectionTestDataset
