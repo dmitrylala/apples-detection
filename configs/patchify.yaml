@@ -21,7 +21,7 @@ defaults:
 task_name: patchify
 
 min_train_instances: 4
-suffix: -patches
+suffix: -patches_inst4_ker400max
 
 # tags to help you identify your experiments
 # you can overwrite this in experiment configs

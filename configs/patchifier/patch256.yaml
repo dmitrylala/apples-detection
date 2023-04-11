@@ -1,7 +1,7 @@
 _target_: apples_detection.utils.SmartPatchifier
 
 image_shape: [1280, 720]
-kernel_size: [256, 256]
+kernel_size: [400, 400]
 min_overlapping: [0.0, 0.0]
 max_overlapping: [0.7, 0.7]
-overlap_policy: [min, min]
+overlap_policy: [max, max]

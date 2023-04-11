@@ -1,0 +1,42 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: minneapple
+  - override /model: minneapple
+  - override /trainer: cpu
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+logger:
+  wandb:
+    name: faster-rcnn-adam-patches
+    group: minneapple-patches
+    tags: [faster_rcnn, adam]
+
+seed: 42
+
+data:
+  batch_size: 8
+  patches_suffix: -patches_inst4_ker400max
+  train_groups: []
+  flip: True
+
+trainer:
+  max_epochs: 30
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  weight_decay: 0.0001
+
+callbacks:
+  model_checkpoint:
+    monitor: val/map
+
+  early_stopping:
+    monitor: val/map
