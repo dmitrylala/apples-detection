@@ -32,6 +32,7 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
         metrics = MetricCollection([MeanAveragePrecision(**iou_args)])
         self.train_acc = metrics.clone(prefix="train/")
         self.val_acc = metrics.clone(prefix="val/")
+        self.test_acc = metrics.clone()
 
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
@@ -123,6 +124,29 @@ class MinneAppleDetectionLitModule(pl.LightningModule):
             self.log_images(images, targets, preds, batch_idx)
 
         self.val_acc.reset()
+
+    def test_step(self, batch: Any, batch_idx: int):
+        images, targets = batch
+        batch_size = len(images)
+        preds = self.forward(images)
+
+        metrics = self.test_acc(preds, targets)
+        self.log_dict(
+            metrics,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+            batch_size=batch_size,
+            logger=True,
+        )
+
+        return metrics
+
+    def test_epoch_end(self, outputs: Any) -> None:
+        metrics = self.test_acc.compute()
+        self.log_dict(metrics, prog_bar=True, sync_dist=True, logger=True)
+        self.test_acc.reset()
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
         if len(batch) == 2:

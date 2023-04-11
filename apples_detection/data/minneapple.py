@@ -8,7 +8,7 @@ from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset
 from torchtext.utils import download_from_url, extract_archive
 
-from .components import MinneAppleDetectionDataset
+from .components import MinneAppleDetectionDataset, MinneAppleDetectionTestDataset
 from .components.utils import add_leading_zeros
 
 DOWNLOAD_URL = "https://conservancy.umn.edu/bitstream/handle/11299/206575/detection.tar.gz"
@@ -52,11 +52,12 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         data_dir: str = "data/minneapple-detection",
         train_groups: Tuple[str] = ("20150921",),
         val_groups: Tuple[str] = ("20150919",),
+        test_gt: str = "data/minneapple-test/detection/ground_truth.json",
         batch_size: int = 2,
         num_workers: int = 1,
         patches_suffix: str = "",
         normalize: bool = False,
-        flip: bool = True,
+        flip: bool = False,
         rescale: bool = False,
         persistent_workers: bool = False,
         pin_memory: bool = True,
@@ -137,7 +138,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
         careful not to execute things like random split twice!
         """
-        if stage not in {"fit", "validate", "predict"}:
+        if stage not in {"fit", "validate", "test", "predict"}:
             raise ValueError(f"Not expected stage: {stage}")
 
         train_mode = "train" + self.hparams.patches_suffix
@@ -158,6 +159,13 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
                 transform=self.train_transforms,
                 groups=self.hparams.train_groups,
             )
+        elif stage == "test":
+            self.data_test = MinneAppleDetectionTestDataset(
+                gt_mapping_path=self.hparams.test_gt,
+                rootdir=self.hparams.data_dir,
+                mode=test_mode,
+                transform=self.val_transforms,
+            )
         elif stage == "predict":
             self.data_predict = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
@@ -174,6 +182,12 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
     def val_dataloader(self):
         return self.dl_factory(
             dataset=self.data_val,
+            shuffle=False,
+        )
+
+    def test_dataloader(self):
+        return self.dl_factory(
+            dataset=self.data_test,
             shuffle=False,
         )
 

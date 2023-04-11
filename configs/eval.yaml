@@ -2,8 +2,8 @@
 
 defaults:
   - _self_
-  - data: mnist # choose datamodule with `test_dataloader()` for evaluation
-  - model: mnist
+  - data: minneapple # choose datamodule with `test_dataloader()` for evaluation
+  - model: minneapple
   - logger: null
   - trainer: default
   - paths: default
@@ -12,7 +12,10 @@ defaults:
 
 task_name: eval
 
+model_name: best_faster_rcnn_09.04.23
+save_to: ${paths.metrics_dir}${.model_name}.csv
+
 tags: [dev]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: ???
+ckpt_path: ${paths.models_dir}${.model_name}.ckpt

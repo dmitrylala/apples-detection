@@ -1,6 +1,8 @@
+from pathlib import Path
 from typing import List, Tuple
 
 import hydra
+import pandas as pd
 import pyrootutils
 from omegaconf import DictConfig
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
@@ -74,6 +76,14 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
 
     metric_dict = trainer.callback_metrics
+    metrics = pd.DataFrame.from_records(
+        [{name: value.cpu().item() for name, value in metric_dict.items()}],
+        exclude=["map_per_class", "mar_100_per_class"],
+        index=[cfg.model_name],
+    )
+
+    Path(cfg.save_to).parent.mkdir(parents=True, exist_ok=True)
+    metrics.to_csv(cfg.save_to, index_label="model")
 
     return metric_dict, object_dict
 
