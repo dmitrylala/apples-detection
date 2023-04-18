@@ -68,11 +68,11 @@ def patchify(cfg: DictConfig) -> None:
         suffix=cfg.suffix,
     )
 
-    datamodule.setup("predict")
+    datamodule.setup("test")
     utils.patchify_detection_ds(
         patchifier,
-        datamodule.data_predict,
-        has_target=False,
+        datamodule.data_test,
+        has_target=True,
         suffix=cfg.suffix,
     )
 
