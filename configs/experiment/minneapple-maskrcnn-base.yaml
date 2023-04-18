@@ -21,7 +21,7 @@ logger:
 seed: 42
 
 data:
-  batch_size: 2
+  batch_size: 4
   flip: true
 
 trainer:
