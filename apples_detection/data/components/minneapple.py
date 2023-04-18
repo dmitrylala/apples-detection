@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import Dict, Literal, Optional, Set, Union
+from typing import Dict, Optional, Set, Union
 
 import numpy as np
 import torch
@@ -15,16 +15,16 @@ class MinneAppleDetectionDataset(ImageDataset):
     def __init__(
         self,
         rootdir: Union[str, Path],
-        mode: Literal["train", "test"],
+        suffix: str,
+        test_mode: bool,
         transform: Optional[Union[BasicTransform, BaseCompose]],
         groups: Optional[Set[str]] = None,
         augment: Optional[Union[BasicTransform, BaseCompose]] = None,
         input_dtype: str = "float32",
     ) -> None:
-        test_mode = "test" in mode
         super().__init__(transform, augment, input_dtype, test_mode=test_mode)
 
-        root = Path(rootdir) / mode
+        root = Path(rootdir) / suffix
         assert root.exists()
         assert (root / "images").exists()
         if not test_mode:
@@ -151,8 +151,6 @@ class MinneAppleDetectionDataset(ImageDataset):
             sample["bboxes"] = torch.from_numpy(np.array(sample["bboxes"])).float()
             if sample["bboxes"].shape == torch.Size([0]):
                 sample["bboxes"] = torch.zeros((0, 4), dtype=torch.float32)
-
-            if not sample["masks"]:
                 sample["masks"] = torch.zeros((0, *sample["image"].shape[-2:])).to(torch.uint8)
             else:
                 sample["masks"] = torch.stack(sample["masks"]).to(torch.uint8)
