@@ -1,0 +1,35 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: minneapple
+  - override /model: minneapple-maskrcnn
+  # - override /trainer: gpu
+  - override /trainer: cpu
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+logger:
+  wandb:
+    name: mask-rcnn-adam
+    group: minneapple-maskrcnn
+    tags: [mask_rcnn, adam]
+
+seed: 42
+
+data:
+  batch_size: 2
+  flip: true
+
+trainer:
+  max_epochs: 30
+
+callbacks:
+  model_checkpoint:
+    monitor: val/map
+
+  early_stopping:
+    monitor: val/map

@@ -26,5 +26,7 @@ class MaskRCNN(nn.Module):
         )
         self.model = model
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x, y=None):
+        if y is None:
+            return self.model(x)
+        return self.model(x, targets=y)
