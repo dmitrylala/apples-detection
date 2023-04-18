@@ -5,7 +5,6 @@ train_groups:
   - "20150921"
 val_groups:
   - "20150919"
-test_gt: ${paths.data_dir}minneapple-test/detection/ground_truth.json
 
 batch_size: 2
 num_workers: 2

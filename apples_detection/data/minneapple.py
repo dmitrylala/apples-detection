@@ -8,7 +8,7 @@ from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset
 from torchtext.utils import download_from_url, extract_archive
 
-from .components import MinneAppleDetectionDataset, MinneAppleDetectionTestDataset
+from .components import MinneAppleDetectionDataset
 from .components.utils import add_leading_zeros
 
 DOWNLOAD_URL = "https://conservancy.umn.edu/bitstream/handle/11299/206575/detection.tar.gz"
@@ -52,7 +52,6 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         data_dir: str = "data/minneapple-detection",
         train_groups: Tuple[str] = ("20150921",),
         val_groups: Tuple[str] = ("20150919",),
-        test_gt: str = "data/minneapple-test/detection/ground_truth.json",
         batch_size: int = 2,
         num_workers: int = 1,
         patches_suffix: str = "",
@@ -103,6 +102,7 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
+        self.data_test: Optional[Dataset] = None
         self.data_predict: Optional[Dataset] = None
 
     def prepare_data(self):
@@ -141,13 +141,14 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         if stage not in {"fit", "validate", "test", "predict"}:
             raise ValueError(f"Not expected stage: {stage}")
 
-        train_mode = "train" + self.hparams.patches_suffix
-        test_mode = "test" + self.hparams.patches_suffix
+        train_suffix = "train" + self.hparams.patches_suffix
+        test_suffix = "test" + self.hparams.patches_suffix
 
         if stage in {"fit", "validate"}:
             self.data_val = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
-                mode=train_mode,
+                suffix=train_suffix,
+                test_mode=False,
                 transform=self.val_transforms,
                 groups=self.hparams.val_groups,
             )
@@ -155,23 +156,24 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
         if stage == "fit":
             self.data_train = MinneAppleDetectionDataset(
                 self.hparams.data_dir,
-                mode=train_mode,
+                suffix=train_suffix,
+                test_mode=False,
                 transform=self.train_transforms,
                 groups=self.hparams.train_groups,
             )
         elif stage == "test":
-            self.data_test = MinneAppleDetectionTestDataset(
-                gt_mapping_path=self.hparams.test_gt,
-                rootdir=self.hparams.data_dir,
-                mode=test_mode,
+            self.data_test = MinneAppleDetectionDataset(
+                self.hparams.data_dir,
+                suffix=test_suffix,
+                test_mode=False,
                 transform=self.val_transforms,
             )
-        elif stage == "predict":
-            self.data_predict = MinneAppleDetectionDataset(
-                self.hparams.data_dir,
-                mode=test_mode,
-                transform=self.predict_transforms,
-            )
+        # elif stage == "predict":
+        #     self.data_predict = MinneAppleDetectionDataset(
+        #         self.hparams.data_dir,
+        #         test_mode=True,
+        #         transform=self.predict_transforms,
+        #     )
 
     def train_dataloader(self):
         return self.dl_factory(
@@ -191,11 +193,11 @@ class MinneAppleDetectionModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def predict_dataloader(self):
-        return self.dl_factory(
-            dataset=self.data_predict,
-            shuffle=False,
-        )
+    # def predict_dataloader(self):
+    #     return self.dl_factory(
+    #         dataset=self.data_predict,
+    #         shuffle=False,
+    #     )
 
     def state_dict(self):
         """Extra things to save to checkpoint."""

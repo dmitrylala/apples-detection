@@ -1,5 +1,3 @@
-import json
-from collections import defaultdict
 from functools import partial
 from pathlib import Path
 from typing import Dict, Literal, Optional, Set, Union
@@ -8,10 +6,9 @@ import numpy as np
 import torch
 from albumentations import BaseCompose, BasicTransform
 from PIL import Image
-from torchvision.ops import box_convert
 
 from .base import ImageDataset
-from .utils import DetectionDatasetPaths, add_leading_zeros, filter_paths_with_suffixes
+from .utils import DetectionDatasetPaths, filter_paths_with_suffixes
 
 
 class MinneAppleDetectionDataset(ImageDataset):
@@ -173,61 +170,3 @@ class MinneAppleDetectionDataset(ImageDataset):
             }
 
         return sample["image"]
-
-
-class MinneAppleDetectionTestDataset(MinneAppleDetectionDataset):
-    def __init__(
-        self,
-        gt_mapping_path: str,
-        **kwargs,
-    ) -> None:
-        super().__init__(**kwargs)
-        self.test_mode = False
-
-        with open(gt_mapping_path) as f:
-            gt_mapping = json.load(f)
-
-        annotations_by_id = defaultdict(list)
-        for annotation in gt_mapping["annotations"]:
-            annotations_by_id[annotation["image_id"]].append(annotation["bbox"])
-
-        for img_id in annotations_by_id:
-            annotations_by_id[img_id] = box_convert(
-                torch.Tensor(annotations_by_id[img_id]).int(),
-                in_fmt="xywh",
-                out_fmt="xyxy",
-            )
-
-        self.image_name_to_bboxes = {}
-        for image_info in gt_mapping["images"]:
-            image_name = str(add_leading_zeros(Path(image_info["filename"])))
-            self.image_name_to_bboxes[image_name] = annotations_by_id[image_info["id"]]
-
-    def get_raw(self, idx) -> Dict:
-        """
-        Get item sample.
-        Returns:
-            sample: dict, where
-            sample['image'] - Tensor, representing image after augmentations.
-            sample['target'] - Target class.
-            sample['index'] - Index.
-        """
-        img_path = self.paths[idx]
-
-        image = self._read_image(img_path)
-        sample = {"image": image, "image_id": idx}
-
-        boxes = self.image_name_to_bboxes[img_path.name].numpy()
-        n_boxes = boxes.shape[0]
-
-        target = {
-            "bboxes": boxes,
-            "labels": np.ones((n_boxes,), dtype=np.int64),
-            "area": (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]),
-            "iscrowd": np.zeros((n_boxes,), dtype=np.int64),
-            "masks": np.zeros((0, *image.shape[-2:])),
-        }
-
-        sample.update(target)
-
-        return self._apply_transform(self.augment, sample)
