@@ -30,7 +30,7 @@ opencv-contrib-python = "^4.7.0.72"
 
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.2.1"
+pytest = "^7.4.2"
 ipython = "^8.10.0"
 jupyter = "^1.0.0"
 pre-commit = "^3.1.0"
